@@ -54,7 +54,20 @@ simulator, prints a scorecard, and writes `docs/media/scorecard.png`.
 
 ## 3. Run everything — one command
 
-`bci serve` runs the API **and** the cockpit on a single port. From the project root (venv active):
+`bci serve` runs the API **and** the cockpit on a single port.
+
+**From the repo root — no `cd`, no venv activation** (uses the root launcher scripts):
+
+```powershell
+.\serve.ps1                   # Windows  → http://localhost:8000/app/
+.\serve.ps1 --port 9000       # flags pass through
+```
+```bash
+./serve.sh                    # macOS / Linux → http://localhost:8000/app/
+./serve.sh --port 9000
+```
+
+Or, with the venv **already active**, `bci serve` works from anywhere:
 
 ```bash
 bci serve                     # → http://localhost:8000/app/

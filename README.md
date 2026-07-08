@@ -167,6 +167,18 @@ python -m pytest -q                     # expect: 29 passed
 bci serve                               # API + cockpit → http://localhost:8000/app/
 ```
 
+### Run from the repo root (no `cd`, no activation)
+
+```powershell
+.\serve.ps1                 # Windows  → http://localhost:8000/app/
+```
+```bash
+./serve.sh                  # macOS / Linux → http://localhost:8000/app/
+```
+
+These launchers find the venv for you. (With the venv active, plain `bci serve` also works from
+anywhere.)
+
 ### The `bci` commands (any OS)
 
 ```bash

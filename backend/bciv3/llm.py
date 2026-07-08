@@ -84,29 +84,42 @@ def _chat(base: str, key: str | None, model: str, prompt: str, max_tokens: int, 
     return data["choices"][0]["message"]["content"]
 
 
-def invoke_json(prompt: str, max_tokens: int = 2000, timeout: float = 300.0) -> str:
+def _json_mode_enabled() -> bool:
+    """Whether to send ``response_format: json_object`` (Ollama's grammar-constrained JSON).
+
+    It reliably fixes *thinking* models (qwen3.5), but on some Ollama builds the JSON grammar makes
+    a normal instruct model (qwen2.5:7b) crawl or hang — a plain chat is fast, the constrained call
+    times out. qwen2.5 emits clean JSON from the prompt alone, so it doesn't need the constraint.
+    Set ``BCI_LLM_JSON_MODE=off`` (or 0/false/no) to drop it. Default: on."""
+    return os.environ.get("BCI_LLM_JSON_MODE", "on").lower() not in ("off", "0", "false", "no")
+
+
+def invoke_json(prompt: str, max_tokens: int = 2000, timeout: float = 300.0,
+                json_mode: bool | None = None) -> str:
     """Return raw model text (expected JSON). Raises if no provider / on failure.
 
     For thinking models (Qwen3, etc.) the default token budget is generous so the JSON that
     follows the reasoning isn't truncated. Set ``BCI_LLM_NO_THINK=1`` to append ``/no_think`` —
-    Qwen3 then skips the reasoning block entirely, for faster, cleaner structured output."""
+    Qwen3 then skips the reasoning block entirely, for faster, cleaner structured output.
+    ``json_mode`` overrides the ``BCI_LLM_JSON_MODE`` env (see ``_json_mode_enabled``)."""
     if os.environ.get("BCI_LLM_NO_THINK") in ("1", "true", "yes"):
         prompt = prompt + "\n/no_think"
     timeout = float(os.environ.get("BCI_LLM_TIMEOUT", timeout))    # local 9B cold-loads are slow
+    jm = _json_mode_enabled() if json_mode is None else json_mode
     p = provider()
     if p == "local":
         return _chat(os.environ["LOCAL_LLM_URL"], os.environ.get("LOCAL_LLM_KEY"),
-                     os.environ.get("LOCAL_LLM_MODEL", "qwen2.5:7b"), prompt, max_tokens, timeout)
+                     os.environ.get("LOCAL_LLM_MODEL", "qwen2.5:7b"), prompt, max_tokens, timeout, jm)
     if p == "nvidia":
         key = os.environ.get("NVIDIA_API_KEY") or os.environ["NGC_API_KEY"]
         return _chat(NVIDIA_BASE, key, os.environ.get("BCI_LLM_MODEL", "qwen/qwen2.5-7b-instruct"),
-                     prompt, max_tokens, timeout)
+                     prompt, max_tokens, timeout, jm)
     if p == "openai":
         return _chat(OPENAI_BASE, os.environ["OPENAI_API_KEY"],
-                     os.environ.get("BCI_LLM_MODEL", "gpt-4o-mini"), prompt, max_tokens, timeout)
+                     os.environ.get("BCI_LLM_MODEL", "gpt-4o-mini"), prompt, max_tokens, timeout, jm)
     if p == "openrouter":
         return _chat(OPENROUTER_BASE, os.environ["OPENROUTER_API_KEY"],
-                     os.environ.get("BCI_LLM_MODEL", "qwen/qwen-2.5-7b-instruct"), prompt, max_tokens, timeout)
+                     os.environ.get("BCI_LLM_MODEL", "qwen/qwen-2.5-7b-instruct"), prompt, max_tokens, timeout, jm)
     if p == "anthropic":
         data = _post("https://api.anthropic.com/v1/messages",
                      {"x-api-key": os.environ["ANTHROPIC_API_KEY"], "anthropic-version": "2023-06-01",
@@ -115,6 +128,36 @@ def invoke_json(prompt: str, max_tokens: int = 2000, timeout: float = 300.0) -> 
                       "temperature": 0.6, "messages": [{"role": "user", "content": prompt}]}, timeout)
         return "".join(b.get("text", "") for b in data.get("content", []))
     raise RuntimeError("no LLM provider configured (set LOCAL_LLM_URL / NVIDIA_API_KEY / …)")
+
+
+def _ping_once(json_mode: bool, max_tokens: int, timeout: float) -> dict:
+    import time
+    t0 = time.monotonic()
+    try:
+        txt = invoke_json('Reply with exactly this JSON and nothing else: {"ok": true}',
+                          max_tokens=max_tokens, timeout=timeout, json_mode=json_mode)
+        return {"ok": True, "elapsed": round(time.monotonic() - t0, 1), "content": (txt or "")[:120]}
+    except Exception as exc:
+        return {"ok": False, "elapsed": round(time.monotonic() - t0, 1),
+                "error": str(exc) or type(exc).__name__}
+
+
+def ping(max_tokens: int = 50, timeout: float | None = None) -> dict:
+    """Two minimal live LLM calls, timed — the decisive 'is the model working, and is JSON-mode the
+    bottleneck?' probe. Sends a tiny prompt with the grammar-constrained JSON mode ON and then OFF,
+    so a fast-plain / slow-json split points straight at ``response_format`` as the culprit.
+
+    Returns ``{provider, model, json, plain}`` where each of ``json``/``plain`` is
+    ``{ok, elapsed, content?|error?}``. ``provider=None`` → nothing configured."""
+    p = provider()
+    if not p:
+        return {"ok": False, "provider": None, "error": "no provider configured"}
+    model = (os.environ.get("LOCAL_LLM_MODEL", "qwen2.5:7b") if p == "local"
+             else os.environ.get("BCI_LLM_MODEL", "?"))
+    to = timeout if timeout is not None else 60.0
+    j = _ping_once(True, max_tokens, to)
+    pl = _ping_once(False, max_tokens, to)
+    return {"ok": j["ok"] or pl["ok"], "provider": p, "model": model, "json": j, "plain": pl}
 
 
 def _strip_thinking(s: str) -> str:

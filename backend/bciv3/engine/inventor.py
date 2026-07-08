@@ -87,11 +87,14 @@ def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend
         return out
 
     if chosen == "llm":
+        import time
         for _ in range(3):
+            t0 = time.monotonic()
             try:
                 parsed = llm.extract_json(llm.invoke_json(build_invent_prompt(inv, prompt, lens, context), max_tokens=2000))
             except Exception as exc:
-                return _grounded({**_rule_based(inv, prompt), "note": f"llm failed ({exc}); used fallback"})
+                dt = round(time.monotonic() - t0, 1)
+                return _grounded({**_rule_based(inv, prompt), "note": f"llm failed ({exc} after {dt}s); used fallback"})
             if parsed and parsed.get("params"):
                 _list = lambda k: [str(x) for x in (parsed.get(k) or [])][:40]
                 _num = lambda k, d: float(parsed.get(k) or d)

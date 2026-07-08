@@ -66,6 +66,38 @@ def _health(_args) -> int:
     return 0
 
 
+def _ping(args) -> int:
+    import bciv3
+    r = bciv3.llm.ping(max_tokens=args.max_tokens, timeout=args.timeout)
+    if r.get("provider") is None:
+        print("✗ No LLM configured. Set LOCAL_LLM_URL=http://localhost:11434/v1 in backend/.env")
+        return 1
+    j, pl = r["json"], r["plain"]
+    fmt = lambda x: (f"OK  {x['elapsed']}s  → {x.get('content','')!r}" if x["ok"]
+                     else f"FAIL {x['elapsed']}s  → {x.get('error','')}")
+    print(f"provider={r['provider']}  model={r['model']}\n")
+    print(f"  JSON-mode (response_format) : {fmt(j)}")
+    print(f"  plain-mode (no constraint)  : {fmt(pl)}\n")
+    if pl["ok"] and not j["ok"]:
+        print("→ DIAGNOSIS: the JSON grammar constraint is the bottleneck — plain works, JSON-mode hangs.")
+        print("  FIX (no code change, effective now):  set  BCI_LLM_JSON_MODE=off  in backend/.env")
+        print("  qwen2.5:7b emits clean JSON from the prompt alone, so it doesn't need the constraint.")
+    elif j["ok"] and pl["ok"]:
+        print("→ Both modes work. The model is healthy; a slow full invention is just generation length")
+        print("  — raise BCI_LLM_TIMEOUT in backend/.env if a 2000-token run still times out.")
+    elif not j["ok"] and not pl["ok"]:
+        err = str(j.get("error", "")).lower()
+        if "timed out" in err:
+            print("→ Both modes time out — the model itself is slow/cold. Warm it (`ollama run qwen2.5:7b`),")
+            print("  check `ollama ps` shows GPU (not 100% CPU), or raise:  bci ping --timeout 180")
+        else:
+            print("→ Both modes error before generating. Check `ollama serve` is up, the model is pulled")
+            print("  (`ollama list`), and LOCAL_LLM_URL is correct (default http://localhost:11434/v1).")
+    else:
+        print("→ JSON-mode works but plain failed (unusual). Keep JSON-mode on; re-run to confirm.")
+    return 0 if r.get("ok") else 1
+
+
 def _search(args) -> int:
     import bciv3
     res = bciv3.retrieve(args.query)
@@ -138,6 +170,11 @@ def main(argv=None) -> int:
     rc.add_argument("--no-ground", dest="ground", action="store_false", help="skip the literature search (faster)")
     rc.set_defaults(ground=True)
     rc.set_defaults(fn=_record)
+
+    pg = sub.add_parser("ping", help="one tiny timed LLM call — is the model actually working & how fast?")
+    pg.add_argument("--max-tokens", type=int, default=50, dest="max_tokens")
+    pg.add_argument("--timeout", type=float, default=60.0, help="seconds to wait before giving up")
+    pg.set_defaults(fn=_ping)
 
     sr = sub.add_parser("search", help="preview retrieved literature / prior art for a query")
     sr.add_argument("query")

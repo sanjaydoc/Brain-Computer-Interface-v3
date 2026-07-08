@@ -11,11 +11,14 @@ Honesty by construction: the engine only proposes; only the physics can move the
 passing score means *physically admissible*, not *proven in a living brain*.
 """
 
-from . import llm, laws, innovations, engine, simulator
+from . import llm, laws, innovations, engine, simulator, detailer, store, recorder
 from .engine import invent, design, rank, backends, LENSES
 from .simulator import simulate, simulate_params, report
+from .detailer import detail
+from .recorder import record, build_record
 from .innovations import CATALOG, all_ids
 
-__all__ = ["llm", "laws", "innovations", "engine", "simulator",
+__all__ = ["llm", "laws", "innovations", "engine", "simulator", "detailer", "store", "recorder",
            "invent", "design", "rank", "backends", "LENSES",
-           "simulate", "simulate_params", "report", "CATALOG", "all_ids"]
+           "simulate", "simulate_params", "report", "detail", "record", "build_record",
+           "CATALOG", "all_ids"]

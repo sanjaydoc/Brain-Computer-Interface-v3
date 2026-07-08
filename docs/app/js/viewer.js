@@ -93,27 +93,46 @@ function runLocal(tid) {
   return { cand, s };
 }
 
-async function runOne(tid) {
-  if (!apiUp) return runLocal(tid);
-  try {
-    const r = await fetch(API + '/api/invent', {
-      method: 'POST', headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ topic: tid, prompt: $('prompt').value, lens: $('lens').value, backend: 'auto' }),
-      signal: AbortSignal.timeout(120000),
-    });
-    const d = await r.json();
-    if (d.error) throw new Error(d.error);
-    const res = d.result, cand = { ...d.candidate };
-    const s = { score: res.score, passed: res.passed, limiting: res.limiting, metrics: res.metrics };
-    scores[tid] = { score: res.score, passed: res.passed, fidelity: res.fidelity };
-    return { cand, s };
-  } catch (e) {
-    apiUp = false; $('backend').textContent = 'rule-based (browser)';
-    return runLocal(tid);
-  }
+function saveLocal(tid, cand, s) {   // browser fallback when no backend — light record to localStorage
+  const id = 'loc_' + Date.now() + '_' + Math.random().toString(36).slice(2, 7);
+  const rec = { id, topic: tid, title: cand.title, params: cand.params,
+    score: { passed: s.passed, score: +(+s.score).toFixed(4), fidelity: TOPICS[tid].fidelity, limiting: s.limiting } };
+  const all = JSON.parse(localStorage.getItem('bciv3_saved') || '[]');
+  all.push(rec); localStorage.setItem('bciv3_saved', JSON.stringify(all));
+  return rec;
 }
 
-function showVerdict(tid, cand, s) {
+async function runOne(tid, { save = false } = {}) {
+  if (apiUp) {
+    try {
+      const ep = save ? '/api/record' : '/api/invent';
+      const r = await fetch(API + ep, {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ topic: tid, prompt: $('prompt').value, lens: $('lens').value, backend: 'auto' }),
+        signal: AbortSignal.timeout(180000),
+      });
+      const d = await r.json();
+      if (d.error) throw new Error(d.error);
+      if (save) {
+        const rec = d.record;
+        scores[tid] = { score: rec.score.score, passed: rec.score.passed, fidelity: rec.score.fidelity };
+        return { cand: { title: rec.title, params: rec.params, mechanism: rec.mechanism, assumptions: rec.assumptions,
+                         risks: rec.risks, lens: rec.lens, backend: rec.backend, provider: rec.provider },
+          s: rec.score, detail: rec.detail, parts: rec.parts, id: rec.id, saved: true, store: d.store };
+      }
+      const res = d.result, cand = { ...d.candidate };
+      scores[tid] = { score: res.score, passed: res.passed, fidelity: res.fidelity };
+      return { cand, s: { score: res.score, passed: res.passed, limiting: res.limiting, metrics: res.metrics } };
+    } catch (e) {
+      apiUp = false; $('backend').textContent = 'rule-based (browser)';
+    }
+  }
+  const { cand, s } = runLocal(tid);
+  const saved = save ? saveLocal(tid, cand, s) : null;
+  return { cand, s, detail: null, parts: null, id: saved && saved.id, saved: !!saved, store: 'browser (localStorage)' };
+}
+
+function showVerdict(tid, cand, s, extra = {}) {
   const t = TOPICS[tid];
   $('v-title').textContent = t.title;
   const pass = $('v-pass'); pass.textContent = s.passed ? 'PASS ✓' : 'FAIL ✗';
@@ -137,6 +156,14 @@ function showVerdict(tid, cand, s) {
             : cand.backend === 'llm-refine' ? 'llm (refined)' : 'rule-based';
   $('c-mech').innerHTML = cand.mechanism ? `<div class="eyebrow" style="margin-top:.6rem">Mechanism</div><p class="small" style="color:var(--ink-2)">${esc(cand.mechanism)}</p>` : '';
   $('c-via').textContent = 'via ' + via;
+  // multi-domain detail (from the backend record) + parts + save status
+  const det = extra.detail, parts = extra.parts;
+  $('c-detail').innerHTML = det ? '<hr class="divider"/><div class="eyebrow">Detailed summary</div>' +
+    ['biophysics', 'physics', 'electronics', 'biology'].filter((k) => det[k] && det[k] !== '—')
+      .map((k) => `<div class="detsec"><span class="lbl">${k}</span><p>${esc(det[k])}</p></div>`).join('') : '';
+  $('c-parts').innerHTML = (parts && parts.length) ? '<div class="eyebrow" style="margin-top:.5rem">Parts</div>' +
+    parts.map((p) => `<div class="part"><b>${esc(p.name)}</b><span>${esc(p.role)}</span></div>`).join('') : '';
+  $('c-saved').textContent = extra.saved ? `✓ auto-saved to ${extra.store || 'database'} (id ${String(extra.id).slice(0, 10)})` : '';
 }
 
 function esc(s) { return String(s).replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c])); }
@@ -152,8 +179,8 @@ function fmt(v) {
 async function inventSelected() {
   selected = $('topic').value;
   $('invent').textContent = apiUp ? '… inventing (LLM)' : '… inventing';
-  const { cand, s } = await runOne(selected);
-  showVerdict(selected, cand, s); draw();
+  const out = await runOne(selected, { save: true });     // auto-save every invention
+  showVerdict(selected, out.cand, out.s, out); draw();
   $('invent').textContent = '✨ Invent + Simulate';
 }
 $('topic').addEventListener('change', inventSelected);
@@ -202,6 +229,54 @@ async function tournament() {
   $('tournament').textContent = '🏆 Run lens tournament';
 }
 $('tournament').addEventListener('click', tournament);
+
+// ---- saved inventions, grouped by the 10 innovation categories ----
+async function loadGroups() {
+  if (apiUp) {
+    try {
+      const r = await fetch(API + '/api/inventions/grouped', { signal: AbortSignal.timeout(4000) });
+      const d = await r.json();
+      if (d.groups) return { groups: d.groups, store: d.store };
+    } catch { apiUp = false; }
+  }
+  const all = JSON.parse(localStorage.getItem('bciv3_saved') || '[]');
+  const groups = {}; TOPIC_IDS.forEach((t) => (groups[t] = []));
+  all.forEach((r) => (groups[r.topic] = groups[r.topic] || []).push(r));
+  TOPIC_IDS.forEach((t) => groups[t].sort((a, b) => b.score.score - a.score.score));
+  return { groups, store: 'browser (localStorage)' };
+}
+
+async function renderSaved() {
+  const { groups, store } = await loadGroups();
+  $('saved-store').textContent = 'store: ' + store;
+  const box = $('saved-groups');
+  box.innerHTML = TOPIC_IDS.map((tid, i) => {
+    const rows = groups[tid] || [];
+    const inner = rows.length ? rows.map((r) =>
+      `<div class="inv-row"><span class="dot ${r.score.passed ? 'p' : 'f'}"></span>` +
+      `<span class="ti">${esc(r.title || TOPICS[tid].title)}</span>` +
+      `<span class="sc">${(+r.score.score).toFixed(3)}</span>` +
+      `<button class="del" data-id="${esc(r.id)}" title="delete">🗑</button></div>`).join('')
+      : '<div class="cat-empty">no saved inventions yet</div>';
+    return `<div class="cat"><h3>${i + 1}. ${esc(TOPICS[tid].title)} <span class="n">${rows.length}</span></h3>${inner}</div>`;
+  }).join('');
+  box.querySelectorAll('.del').forEach((btn) => btn.addEventListener('click', () => deleteInv(btn.dataset.id)));
+}
+
+async function deleteInv(id) {
+  if (apiUp && !String(id).startsWith('loc_')) {
+    try { await fetch(API + '/api/inventions/' + encodeURIComponent(id), { method: 'DELETE' }); } catch { apiUp = false; }
+  }
+  if (String(id).startsWith('loc_') || !apiUp) {
+    const all = JSON.parse(localStorage.getItem('bciv3_saved') || '[]').filter((r) => r.id !== id);
+    localStorage.setItem('bciv3_saved', JSON.stringify(all));
+  }
+  renderSaved();
+}
+
+$('open-saved').addEventListener('click', () => { $('saved').hidden = false; renderSaved(); });
+$('close-saved').addEventListener('click', () => { $('saved').hidden = true; });
+$('saved').addEventListener('click', (e) => { if (e.target.id === 'saved') $('saved').hidden = true; });
 
 // ---- init ----
 $('topic').value = selected;

@@ -53,3 +53,24 @@ def test_api_endpoints():
 
     rk = c.post("/api/rank", json={"topic": "neuron_delivery", "backend": "fallback"}).json()
     assert len(rk["ranked"]) == 10
+
+
+def test_api_record_save_group_delete(tmp_path, monkeypatch):
+    pytest.importorskip("fastapi")
+    monkeypatch.setenv("BCIV3_JSONL", str(tmp_path / "api.jsonl"))
+    monkeypatch.setenv("MONGODB_URI", "mongodb://127.0.0.1:1")     # force JSONL fallback
+    import importlib
+    import bciv3.store as store_mod
+    importlib.reload(store_mod)                                     # picks up the tmp JSONL path
+    from fastapi.testclient import TestClient
+    from bciv3.api.app import app                                   # holds a live ref to store_mod
+    c = TestClient(app)
+
+    rec = c.post("/api/record", json={"topic": "multiplexed_reporters", "backend": "fallback"}).json()["record"]
+    assert rec["id"] and rec["detail"]["physics"] and rec["parts"] and rec["score"]["passed"]
+
+    grouped = c.get("/api/inventions/grouped").json()["groups"]
+    assert len(grouped) == 10 and len(grouped["multiplexed_reporters"]) == 1
+
+    assert c.delete(f"/api/inventions/{rec['id']}").json()["deleted"] is True
+    assert len(c.get("/api/inventions/grouped").json()["groups"]["multiplexed_reporters"]) == 0

@@ -16,6 +16,7 @@ bci = "bciv3.cli:main"
 dev = ["pytest>=8", "httpx>=0.27"]
 plot = ["matplotlib>=3.7"]
 api = ["fastapi>=0.110", "uvicorn>=0.29"]
+db = ["pymongo>=4.6"]
 
 [tool.setuptools]
 packages = ["bciv3", "bciv3.laws", "bciv3.innovations", "bciv3.engine", "bciv3.api"]

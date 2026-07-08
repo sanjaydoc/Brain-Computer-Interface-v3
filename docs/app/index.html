@@ -22,9 +22,22 @@
         </svg>
         bci <span class="muted">v3 · invention cockpit</span>
       </a>
-      <div class="nav-links"><span class="muted small">invention proposes · only physics moves the score</span></div>
+      <div class="nav-links">
+        <button class="nav-btn" id="open-saved">📚 Saved inventions</button>
+        <span class="muted small">invention proposes · only physics moves the score</span>
+      </div>
     </div>
   </nav>
+
+  <div class="modal" id="saved" hidden>
+    <div class="modal-card">
+      <button class="modal-close" id="close-saved" title="close">✕</button>
+      <div class="eyebrow">Database</div>
+      <h2>Saved inventions</h2>
+      <div class="mono small muted" id="saved-store"></div>
+      <div id="saved-groups"></div>
+    </div>
+  </div>
 
   <main class="stage">
     <div class="viewer">
@@ -76,6 +89,9 @@
       <ul class="list" id="c-assume"><li class="muted">—</li></ul>
       <div class="eyebrow">Risks</div>
       <ul class="list" id="c-risks"><li class="muted">—</li></ul>
+      <div id="c-detail"></div>
+      <div id="c-parts"></div>
+      <div class="mono small" id="c-saved" style="color:var(--venv); margin-top:.4rem"></div>
       <div id="tourn"></div>
     </aside>
   </main>

@@ -17,7 +17,7 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import bciv3
-from bciv3 import backends, invent, design, rank, report, all_ids
+from bciv3 import backends, invent, design, rank, report, all_ids, record, store
 from bciv3.engine import LENSES
 from bciv3.innovations import CATALOG
 
@@ -84,6 +84,37 @@ def do_rank(req: RankReq) -> dict:
     n = max(1, min(int(req.n_lenses), len(LENSES)))
     return {"ranked": rank(req.topic, req.prompt, lenses=list(LENSES)[:n], backend=req.backend),
             "n_lenses": n}
+
+
+@app.post("/api/record")
+def do_record(req: DesignReq) -> dict:
+    """Invent → simulate → detail → save. Returns the full stored record."""
+    if req.topic not in CATALOG:
+        return {"error": f"unknown topic {req.topic!r}", "topics": all_ids()}
+    return {"record": record(req.topic, req.prompt, lens=req.lens, backend=req.backend, save=True),
+            "store": store.backend()}
+
+
+@app.get("/api/inventions")
+def do_inventions(topic: str | None = None, limit: int = 50) -> dict:
+    return {"inventions": store.list_records(topic, limit=limit), "store": store.backend()}
+
+
+@app.get("/api/inventions/grouped")
+def do_grouped() -> dict:
+    """All saved inventions grouped by the 10 innovation categories (topics)."""
+    groups = store.list_grouped()
+    return {"groups": {tid: groups.get(tid, []) for tid in CATALOG}, "store": store.backend()}
+
+
+@app.delete("/api/inventions/{rec_id}")
+def do_delete(rec_id: str) -> dict:
+    return {"deleted": store.delete(rec_id)}
+
+
+@app.get("/api/stats")
+def do_stats() -> dict:
+    return store.stats()
 
 
 # --- static cockpit (mounted last so /api/* always wins) ---------------------

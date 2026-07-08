@@ -194,6 +194,37 @@ model-agnostic.
 
 ---
 
+## 4c. Database — capture every invention (MongoDB)
+
+Every invention **auto-saves** — the design, its multi-domain detail (biophysics / physics /
+electronics / biology), its parts list, and its simulator score — grouped by the 10 innovation
+categories. Target: **local MongoDB Community**.
+
+1. Install MongoDB Community and start it (`mongod`), then set (already in `.env.example`):
+
+```ini
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB=bciv3
+```
+
+2. Install the driver and run:
+
+```bash
+pip install -e ".[db]"          # pymongo
+bci record multiplexed_reporters "acoustic, deep, safe"   # invent + detail + score → saved
+bci db --stats                  # counts + pass-rate per category
+bci db multiplexed_reporters    # list saved inventions in one category
+```
+
+Records land in `bciv3.inventions`. In the cockpit, **📚 Saved inventions** shows them grouped by
+the 10 categories, each with a 🗑 delete button.
+
+> **No Mongo yet? It still works.** If Mongo is down or `pymongo` isn't installed, saves fall back
+> to a JSONL file (`inventions.jsonl`), and the browser cockpit saves to `localStorage`. Nothing
+> is lost — switch to Mongo whenever it's up.
+
+---
+
 ## 5. Use it from Python
 
 ```python

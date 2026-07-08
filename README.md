@@ -55,6 +55,7 @@ _Author: **Dr. Sanjay Anbu**_
 - ✅ **Cockpit GUI** — v1's theme + cockpit view; pick a topic, invent, and watch the law simulator grade it live in the browser.
 - ✅ **Thin FastAPI backend** — the cockpit calls the Python engine (and your local Qwen) live; auto-detected, graceful browser fallback.
 - ✅ **`.env` config** — paste `LOCAL_LLM_URL` / `LOCAL_LLM_MODEL` / `NVIDIA_API_KEY` once (zero-dependency loader, git-ignored).
+- ✅ **Auto-save to a database** — every invention (design + multi-domain detail + parts + score) is captured in **MongoDB**, grouped by the 10 categories, with delete; JSONL fallback when Mongo is down.
 - ⬜ **Amber topics as full estimators** — richer models for assembly / twin-sim at scale (Phase 4).
 
 ---

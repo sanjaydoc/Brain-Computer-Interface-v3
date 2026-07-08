@@ -1,0 +1,103 @@
+"""Persistence — save each invention (design + multi-domain detail + score) to MongoDB.
+
+Local MongoDB Community is the target: set ``MONGODB_URI`` (default mongodb://localhost:27017)
+and ``MONGODB_DB`` (default ``bciv3``); records land in the ``inventions`` collection. If pymongo
+isn't installed or Mongo is unreachable, it transparently falls back to a JSONL file
+(``inventions.jsonl``), so the pipeline still records everything before the DB is up.
+"""
+
+from __future__ import annotations
+
+import json
+import os
+import uuid
+from pathlib import Path
+
+_JSONL = Path(os.environ.get("BCIV3_JSONL", "inventions.jsonl"))
+
+
+def _mongo():
+    """Return a live `inventions` collection, or None to signal JSONL fallback."""
+    try:
+        import pymongo
+    except Exception:
+        return None
+    try:
+        uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
+        client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=800)
+        client.admin.command("ping")                       # fail fast if Mongo is down
+        col = client[os.environ.get("MONGODB_DB", "bciv3")]["inventions"]
+        col.create_index([("topic", 1)]); col.create_index([("score.score", -1)])
+        return col
+    except Exception:
+        return None
+
+
+def backend() -> str:
+    return "mongodb" if _mongo() is not None else f"jsonl ({_JSONL})"
+
+
+def save(record: dict) -> str:
+    """Persist one invention record; returns its id. Adds an id if missing."""
+    rec = dict(record)
+    rec.setdefault("id", uuid.uuid4().hex)
+    col = _mongo()
+    if col is not None:
+        rec["_id"] = rec["id"]
+        col.replace_one({"_id": rec["_id"]}, rec, upsert=True)
+    else:
+        with open(_JSONL, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, default=str) + "\n")
+    return rec["id"]
+
+
+def list_records(topic: str | None = None, limit: int = 50) -> list[dict]:
+    """Most-relevant records first (highest score), optionally filtered by topic."""
+    col = _mongo()
+    if col is not None:
+        q = {"topic": topic} if topic else {}
+        cur = col.find(q, {"_id": 0}).sort("score.score", -1).limit(int(limit))
+        return list(cur)
+    if not _JSONL.exists():
+        return []
+    rows = [json.loads(l) for l in _JSONL.read_text(encoding="utf-8").splitlines() if l.strip()]
+    if topic:
+        rows = [r for r in rows if r.get("topic") == topic]
+    rows.sort(key=lambda r: r.get("score", {}).get("score", 0), reverse=True)
+    return rows[:int(limit)]
+
+
+def delete(rec_id: str) -> bool:
+    """Remove one record by id. Returns True if something was deleted."""
+    col = _mongo()
+    if col is not None:
+        return col.delete_one({"_id": rec_id}).deleted_count > 0
+    if not _JSONL.exists():
+        return False
+    rows = [json.loads(l) for l in _JSONL.read_text(encoding="utf-8").splitlines() if l.strip()]
+    keep = [r for r in rows if r.get("id") != rec_id]
+    if len(keep) == len(rows):
+        return False
+    _JSONL.write_text("".join(json.dumps(r, default=str) + "\n" for r in keep), encoding="utf-8")
+    return True
+
+
+def list_grouped(limit_per: int = 100) -> dict:
+    """All records grouped by topic (the 10 categories) — best-first within each."""
+    out: dict[str, list] = {}
+    for r in list_records(limit=100000):
+        out.setdefault(r.get("topic", "?"), []).append(r)
+    return {t: rows[:limit_per] for t, rows in out.items()}
+
+
+def stats() -> dict:
+    rows = list_records(limit=100000)
+    per_topic: dict[str, dict] = {}
+    for r in rows:
+        t = r.get("topic", "?")
+        d = per_topic.setdefault(t, {"count": 0, "passes": 0, "best": 0.0})
+        d["count"] += 1
+        sc = r.get("score", {})
+        d["passes"] += 1 if sc.get("passed") else 0
+        d["best"] = max(d["best"], sc.get("score", 0.0))
+    return {"backend": backend(), "total": len(rows), "per_topic": per_topic}

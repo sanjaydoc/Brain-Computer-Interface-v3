@@ -38,6 +38,27 @@ def _topics(_args) -> int:
     return 0
 
 
+def _record(args) -> int:
+    import bciv3
+    rec = bciv3.record(args.topic, args.prompt or "", lens=args.lens, backend=args.backend, save=True)
+    print(f"saved id={rec['id']}  →  {bciv3.store.backend()}")
+    print(json.dumps({k: rec[k] for k in ("topic", "title", "score", "detail", "parts")}, indent=2))
+    return 0
+
+
+def _db(args) -> int:
+    import bciv3
+    if args.stats:
+        print(json.dumps(bciv3.store.stats(), indent=2)); return 0
+    rows = bciv3.store.list_records(args.topic, limit=args.limit)
+    print(f"store: {bciv3.store.backend()}   ({len(rows)} shown)")
+    for r in rows:
+        sc = r.get("score", {})
+        print(f"  [{'PASS' if sc.get('passed') else 'fail'}] {sc.get('score'):<6} "
+              f"{r.get('topic'):<22} {r.get('title','')[:40]}")
+    return 0
+
+
 def main(argv=None) -> int:
     p = argparse.ArgumentParser(prog="bci", description="Brain-Computer-Interface v3 — invention engine")
     sub = p.add_subparsers(dest="cmd")
@@ -57,6 +78,19 @@ def main(argv=None) -> int:
 
     t = sub.add_parser("topics", help="list the 10 innovation topics")
     t.set_defaults(fn=_topics)
+
+    rc = sub.add_parser("record", help="invent + detail + score, then save to the database")
+    rc.add_argument("topic")
+    rc.add_argument("prompt", nargs="?", default="")
+    rc.add_argument("--lens", default="biomimicry")
+    rc.add_argument("--backend", default="auto", choices=["auto", "llm", "fallback"])
+    rc.set_defaults(fn=_record)
+
+    db = sub.add_parser("db", help="list saved inventions (or --stats)")
+    db.add_argument("topic", nargs="?", default=None)
+    db.add_argument("--limit", type=int, default=20)
+    db.add_argument("--stats", action="store_true")
+    db.set_defaults(fn=_db)
 
     args = p.parse_args(argv)
     if not getattr(args, "fn", None):

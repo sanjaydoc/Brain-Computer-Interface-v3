@@ -81,8 +81,9 @@ def search_pubmed(q: str, n: int = 3) -> list[dict]:
 
 def search_arxiv(q: str, n: int = 3) -> list[dict]:
     try:
-        p = urllib.parse.urlencode({"search_query": f"all:{q}", "start": 0, "max_results": n})
-        return parse_arxiv(_get(f"http://export.arxiv.org/api/query?{p}"), n)
+        p = urllib.parse.urlencode({"search_query": f"all:{q}", "start": 0, "max_results": n,
+                                    "sortBy": "relevance", "sortOrder": "descending"})
+        return parse_arxiv(_get(f"https://export.arxiv.org/api/query?{p}"), n)
     except Exception:
         return []
 
@@ -97,45 +98,69 @@ def search_wikipedia(q: str, n: int = 3) -> list[dict]:
 
 
 def search_pubchem(q: str, n: int = 3) -> list[dict]:
+    # matches inventor-studio-v3: name_type=word so a phrase matches, then per-CID properties
     try:
-        url = f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/{urllib.parse.quote(q)}/cids/JSON"
+        url = (f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/name/"
+               f"{urllib.parse.quote(q)}/cids/JSON?name_type=word")
         cids = json.loads(_get(url)).get("IdentifierList", {}).get("CID", [])[:n]
-        return [_cite("pubchem", f"PubChem CID {c}", f"https://pubchem.ncbi.nlm.nih.gov/compound/{c}") for c in cids]
+        out = []
+        for c in cids:
+            try:
+                pr = json.loads(_get(f"https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/{c}"
+                                     f"/property/IUPACName,MolecularFormula/JSON"))
+                p0 = (pr.get("PropertyTable", {}).get("Properties") or [{}])[0]
+                out.append(_cite("pubchem", p0.get("IUPACName") or f"PubChem CID {c}",
+                                 f"https://pubchem.ncbi.nlm.nih.gov/compound/{c}", p0.get("MolecularFormula", "")))
+            except Exception:
+                out.append(_cite("pubchem", f"PubChem CID {c}", f"https://pubchem.ncbi.nlm.nih.gov/compound/{c}"))
+        return out
     except Exception:
         return []
 
 
 def search_uspto(q: str, n: int = 3) -> list[dict]:
+    # matches inventor-studio-v3: current PatentsView v1 endpoint, _query_string, no key needed
     try:
-        qy = urllib.parse.quote(json.dumps({"_text_any": {"patent_title": q}}))
-        fl = urllib.parse.quote(json.dumps(["patent_number", "patent_title"]))
-        opt = urllib.parse.quote(json.dumps({"per_page": n}))
-        data = json.loads(_get(f"https://api.patentsview.org/patents/query?q={qy}&f={fl}&o={opt}"))
-        return [_cite("uspto", p.get("patent_title", p.get("patent_number")),
-                      f"https://patents.google.com/patent/US{p.get('patent_number')}") for p in (data.get("patents") or [])[:n]]
+        p = urllib.parse.urlencode({
+            "q": json.dumps({"_query_string": {"query": q}}),
+            "f": json.dumps(["patent_title", "patent_number", "patent_abstract"]),
+            "o": json.dumps({"per_page": n}),
+        })
+        data = json.loads(_get(f"https://search.patentsview.org/api/v1/patent/?{p}"))
+        return [_cite("uspto", pt.get("patent_title") or pt.get("patent_number"),
+                      f"https://patents.google.com/patent/US{pt.get('patent_number')}",
+                      pt.get("patent_abstract") or "") for pt in (data.get("patents") or [])[:n]]
     except Exception:
         return []
 
 
 def search_github(q: str, n: int = 3) -> list[dict]:
-    try:
-        tok = os.environ.get("GITHUB_TOKEN")
-        h = {"Authorization": f"Bearer {tok}"} if tok else {}
-        p = urllib.parse.urlencode({"q": q, "per_page": n, "sort": "stars"})
-        data = json.loads(_get(f"https://api.github.com/search/repositories?{p}", headers=h))
-        return [_cite("github", r.get("full_name"), r.get("html_url"), r.get("description") or "")
-                for r in (data.get("items") or [])[:n]]
-    except Exception:
-        return []
+    # matches inventor-studio-v3: sanitized query, Accept header, retry without token on 401
+    import re
+    short = re.sub(r"[^\w\s-]", " ", q).strip()[:80]
+    p = urllib.parse.urlencode({"q": short, "sort": "stars", "order": "desc", "per_page": n})
+    tok = os.environ.get("GITHUB_TOKEN")
+    for use_tok in (True, False):
+        try:
+            h = {"Accept": "application/vnd.github.v3+json"}
+            if use_tok and tok:
+                h["Authorization"] = f"Bearer {tok}"
+            data = json.loads(_get(f"https://api.github.com/search/repositories?{p}", headers=h))
+            return [_cite("github", r.get("full_name"), r.get("html_url"), r.get("description") or "")
+                    for r in (data.get("items") or [])[:n]]
+        except Exception:
+            if use_tok and tok:
+                continue                       # 401 with a bad token → retry unauthenticated
+            return []
+    return []
 
 
 def search_searxng(q: str, n: int = 3) -> list[dict]:
-    base = os.environ.get("SEARXNG_URL")
-    if not base:
-        return []
+    # matches inventor-studio-v3: defaults to a local SearXNG at :8080
+    base = os.environ.get("SEARXNG_BASE_URL") or os.environ.get("SEARXNG_URL") or "http://localhost:8080"
     try:
-        p = urllib.parse.urlencode({"q": q, "format": "json"})
-        data = json.loads(_get(f"{base.rstrip('/')}/search?{p}"))
+        p = urllib.parse.urlencode({"q": q, "format": "json", "pageno": 1})
+        data = json.loads(_get(f"{base.rstrip('/')}/search?{p}", timeout=20))
         return [_cite("searxng", r.get("title"), r.get("url"), r.get("content") or "")
                 for r in (data.get("results") or [])[:n]]
     except Exception:

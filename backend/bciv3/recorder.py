@@ -27,6 +27,7 @@ def build_record(topic: str, candidate: dict, prompt: str = "") -> dict:
         "layer": inv.layer, "domain": inv.domain, "laws": inv.laws,
         "lens": candidate.get("lens", "—"),
         "backend": candidate.get("backend", "—"), "provider": candidate.get("provider"),
+        "note": candidate.get("note", ""),
         "grounded": bool(candidate.get("grounded")),
         "prompt": prompt,
         "params": candidate.get("params", {}),

@@ -70,14 +70,17 @@ def _post(url: str, headers: dict, payload: dict, timeout: float) -> dict:
         return json.loads(resp.read().decode())
 
 
-def _chat(base: str, key: str | None, model: str, prompt: str, max_tokens: int, timeout: float) -> str:
-    headers = {"content-type": "application/json"}
-    if key:
-        headers["Authorization"] = f"Bearer {key}"
-    data = _post(f"{base.rstrip('/')}/chat/completions", headers, {
-        "model": model, "max_tokens": max_tokens, "temperature": 0.6,
-        "messages": [{"role": "user", "content": prompt}],
-    }, timeout)
+def _chat(base: str, key: str | None, model: str, prompt: str, max_tokens: int, timeout: float,
+          json_mode: bool = True) -> str:
+    # Always send a bearer header (Ollama ignores it) — matches inventor-studio-v3's client.
+    headers = {"content-type": "application/json", "Authorization": f"Bearer {key or 'local-no-auth'}"}
+    payload = {"model": model, "max_tokens": max_tokens, "temperature": 0.6,
+               "messages": [{"role": "user", "content": prompt}]}
+    if json_mode:
+        # Force valid-JSON output. Critical for thinking models (Qwen3.5): without it the reasoning
+        # prose eats the token budget and the JSON never arrives → parse fails → fallback.
+        payload["response_format"] = {"type": "json_object"}
+    data = _post(f"{base.rstrip('/')}/chat/completions", headers, payload, timeout)
     return data["choices"][0]["message"]["content"]
 
 
@@ -89,6 +92,7 @@ def invoke_json(prompt: str, max_tokens: int = 2000, timeout: float = 120.0) -> 
     Qwen3 then skips the reasoning block entirely, for faster, cleaner structured output."""
     if os.environ.get("BCI_LLM_NO_THINK") in ("1", "true", "yes"):
         prompt = prompt + "\n/no_think"
+    timeout = float(os.environ.get("BCI_LLM_TIMEOUT", timeout))    # local 9B cold-loads are slow
     p = provider()
     if p == "local":
         return _chat(os.environ["LOCAL_LLM_URL"], os.environ.get("LOCAL_LLM_KEY"),

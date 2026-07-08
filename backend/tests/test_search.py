@@ -42,9 +42,16 @@ def test_build_context_format():
 def test_retrieve_is_graceful_offline():
     # empty query / no sources → empty, never raises
     r = retrieve("", sources=[])
-    assert r == {"context": "", "citations": [], "sources_used": []}
+    assert r["context"] == "" and r["citations"] == [] and r["sources_used"] == []
     r2 = retrieve("anything", sources=["not_a_real_source"])
     assert r2["citations"] == [] and r2["sources_used"] == []
+
+
+def test_retrieve_reports_per_source_status():
+    # unknown sources are ignored; known-but-empty report a status (offline → 'error'/'no results')
+    r = retrieve("connectome", sources=["arxiv", "not_real"])
+    assert "not_real" not in r["per_source"]
+    assert "arxiv" in r["per_source"]        # a human-readable status string either way
 
 
 def test_record_carries_citation_fields():

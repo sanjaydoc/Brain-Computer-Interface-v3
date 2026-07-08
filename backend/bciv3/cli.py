@@ -68,7 +68,10 @@ def _health(_args) -> int:
 def _search(args) -> int:
     import bciv3
     res = bciv3.retrieve(args.query)
-    print(f"sources used: {', '.join(res['sources_used']) or 'none (offline / no results)'}")
+    print("per-source status:")
+    for name, status in sorted(res.get("per_source", {}).items()):
+        print(f"  {name:<10} {status}")
+    print(f"\n{len(res['citations'])} citation(s):")
     for c in res["citations"]:
         print(f"  [{c['source']:<9}] {c['title'][:70]}\n              {c['url']}")
     return 0

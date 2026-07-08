@@ -1,0 +1,215 @@
+50 INVENTION PROMPTS TO TRY — BCI v3 cockpit
+Ten categories, five variants each. Every variant chases the SAME goal for its category but
+from a different creative lens, so you get diverse designs. Paste a prompt into the cockpit,
+pick the matching topic and the suggested lens, and hit Invent + Simulate. Add "aggressive"
+to push the parameters harder. (Lens diversity really shows once a local LLM is wired via
+bci serve; the browser proposer is deterministic.)
+
+==============================================================================
+CATEGORY 1 — In-vivo, non-destructive barcode readout
+Goal: read molecular barcodes ~75 mm deep in a LIVING brain, without harming tissue.
+------------------------------------------------------------------------------
+1.1 (lens: biomimicry)
+    Copy how deep-diving or echolocating animals sense structure through dense tissue, and
+    turn that mechanism into a safe deep reader for molecular barcodes.
+1.2 (lens: crossDomain)
+    Borrow from seismic imaging and medical sonar: use phase-corrected focused ultrasound plus
+    gas-vesicle reporters to read barcodes 75 mm deep without a biopsy.
+1.3 (lens: inversion)
+    Stop trying to extract the molecule. Make each barcode actively broadcast a safe signal
+    outward, so a coarse external sensor can hear it from deep in living tissue.
+1.4 (lens: extreme)
+    Describe the perfect lossless deep reader, then find the simplest real approximation using
+    today's ultrasound or MRI reporters that stays under all safety limits.
+1.5 (lens: combinatorial)
+    Fuse focused ultrasound, engineered acoustic reporters, and skull-aberration correction
+    into one non-destructive reader that works at depth.
+
+==============================================================================
+CATEGORY 2 — Massively-multiplexed reporters
+Goal: give a human fUS voxel enough distinguishable channels to tell ~1,000,000 synapses apart
+by identity. Maximize barcode bits.
+------------------------------------------------------------------------------
+2.1 (lens: combinatorial)
+    Combine several orthogonal reporter families so their signatures multiply into thousands of
+    distinguishable channels per voxel; push barcode bits past 46.
+2.2 (lens: scaling)
+    Scale the codebook 1000x: engineer reporters whose collapse pressure or relaxation time
+    spans many fine, separable bins, so identity carries the resolution.
+2.3 (lens: analogical)
+    Treat it like DNA sequencing colours or QR codes: design a reporter alphabet with a huge,
+    reliably-readable codespace for one voxel.
+2.4 (lens: crossDomain)
+    Import frequency-division multiplexing from radio: assign each barcode a distinct spectral
+    slot the sensor can demodulate inside a crowded voxel.
+2.5 (lens: reduction)
+    Find the minimum reporter set that still reaches ~46 bits of identity, so the design is
+    simple enough to actually express in every neuron.
+
+==============================================================================
+CATEGORY 3 — Trans-synaptic pairing at scale and fidelity
+Goal: read which pre-barcode pairs with which post-barcode across every synapse, low error,
+edge F1 above 0.9.
+------------------------------------------------------------------------------
+3.1 (lens: analogical)
+    Copy how contact tracing links two identities from a brief encounter; apply it to pairing
+    pre and post barcodes at each synapse with high fidelity.
+3.2 (lens: historical)
+    Study why early SYNseq pairing was noisy, then design a scheme that specifically suppresses
+    false pairs and dropout to clear F1 = 0.9.
+3.3 (lens: combinatorial)
+    Merge trans-synaptic barcode transfer with molecular consensus tags so each true synapse is
+    read many times and one-off false pairs are rejected.
+3.4 (lens: extreme)
+    Assume perfect pairing chemistry, then approximate it with realistic transfer efficiency and
+    enough sequencing depth to hold edge fidelity high.
+3.5 (lens: inversion)
+    Instead of pairing at the synapse, tag both partners with a shared random token the moment
+    they connect, then recover edges by matching tokens.
+
+==============================================================================
+CATEGORY 4 — About 100 percent neuron delivery
+Goal: label essentially every neuron with a BBB-crossing vector, no coverage blind spots, dose
+safely below the toxicity ceiling.
+------------------------------------------------------------------------------
+4.1 (lens: crossDomain)
+    Borrow targeting tricks from immunology and drug delivery to reach every neuron class with a
+    vector, while keeping the viral dose safe.
+4.2 (lens: biomimicry)
+    Mimic a neurotropic virus that naturally reaches the whole brain, but engineer it to be safe
+    and to transduce all neuron types.
+4.3 (lens: combinatorial)
+    Combine an engineered BBB-crossing capsid with focused-ultrasound BBB opening so coverage
+    approaches 100 percent at a lower systemic dose.
+4.4 (lens: scaling)
+    Scale delivery from mouse to human brain volume without leaving blind spots; solve the
+    dose-versus-coverage trade so no neuron is missed.
+4.5 (lens: reduction)
+    Find the smallest, safest delivery recipe that still hits every neuron once, minimizing the
+    viral load needed for full coverage.
+
+==============================================================================
+CATEGORY 5 — Signal-boost and noise reduction at depth (SNR)
+Goal: keep the read working at 75 mm depth by raising signal and cutting noise, not by a bigger
+scanner.
+------------------------------------------------------------------------------
+5.1 (lens: inversion)
+    Do not build a stronger scanner. Make the source brighter and the background quieter so the
+    same sensor reads clearly at depth.
+5.2 (lens: biomimicry)
+    Borrow signal-amplification from bioluminescence cascades to make reporters far brighter, so
+    SNR survives the trip out of deep tissue.
+5.3 (lens: combinatorial)
+    Fuse brighter reporters, heavy averaging, and skull-aberration correction into one SNR
+    budget that clears detection at 75 mm.
+5.4 (lens: extreme)
+    Assume an ideal noiseless channel, then approximate it with real averaging and background
+    subtraction that still reads at full depth.
+5.5 (lens: reduction)
+    Strip the SNR problem to its core term and win it with the single most effective lever:
+    reporter brightness. Keep everything else minimal.
+
+==============================================================================
+CATEGORY 6 — Whole-brain scan throughput and time
+Goal: read the whole brain in under 30 days via parallel readout and short per-voxel dwell.
+------------------------------------------------------------------------------
+6.1 (lens: scaling)
+    Scale readout channels massively in parallel so total scan time drops from years to under a
+    month; trade dwell time for parallelism.
+6.2 (lens: crossDomain)
+    Borrow from data-center parallelism and camera sensor arrays: read thousands of voxels at
+    once instead of sweeping one at a time.
+6.3 (lens: extreme)
+    Describe an instantaneous whole-brain read, then find the most parallel real design that
+    finishes inside the 30-day budget.
+6.4 (lens: reduction)
+    Cut the scan to its essential operation and parallelize only that, so throughput hits the
+    target with minimal hardware complexity.
+6.5 (lens: future)
+    Assume 2050 readout hardware exists; work back to the parallel-channel count and dwell time
+    needed today to reach a sub-30-day scan.
+
+==============================================================================
+CATEGORY 7 — Exabyte-scale assembly and error-correction
+Goal: assemble a human connectome from noisy reads within a few exabytes, residual error under
+5 percent.
+------------------------------------------------------------------------------
+7.1 (lens: reduction)
+    Reduce assembly to a minimal consensus-plus-confidence pipeline that fits a few exabytes and
+    holds residual error under 5 percent.
+7.2 (lens: crossDomain)
+    Borrow from genome assembly and error-correcting codes to reconstruct the wiring graph from
+    noisy reads at exabyte scale.
+7.3 (lens: combinatorial)
+    Combine consensus voting, GNN gap-fill, and per-edge confidence so the assembled graph is
+    both accurate and storage-efficient.
+7.4 (lens: scaling)
+    Scale a mouse-projectome assembler to 1e14 synapses without the data or error blowing up;
+    keep storage bounded and error low.
+7.5 (lens: future)
+    Assume mature exascale data tooling; work back to the read format and redundancy needed now
+    to make human-scale assembly tractable.
+
+==============================================================================
+CATEGORY 8 — Whole-brain twin simulation
+Goal: run an 86-billion-neuron twin at real time (real-time factor at least 1).
+------------------------------------------------------------------------------
+8.1 (lens: future)
+    Assume zettascale compute is available; design the lean per-synapse kernels needed to run
+    the full twin at real time.
+8.2 (lens: scaling)
+    Scale v1's connectome simulator from worm to 86 billion neurons while keeping the update
+    O(edges) and hitting real time.
+8.3 (lens: crossDomain)
+    Borrow from large-scale graph processing and GPU sparse kernels to step 1e14 synapses fast
+    enough for a real-time twin.
+8.4 (lens: reduction)
+    Reduce each neuron update to the cheapest faithful operation, so the whole-brain twin runs
+    in real time on realistic hardware.
+8.5 (lens: extreme)
+    Describe an infinitely fast simulator, then find the most efficient real kernel and hardware
+    mix that still reaches a real-time factor of one.
+
+==============================================================================
+CATEGORY 9 — Behavioural upload-verification protocol
+Goal: prove the recovered brain behaves like the original; behavioural fidelity above 0.9.
+------------------------------------------------------------------------------
+9.1 (lens: extreme)
+    Design the most demanding possible battery of stimuli and a sensitive divergence metric that
+    would expose any behavioural mismatch above chance.
+9.2 (lens: analogical)
+    Treat it like a Turing test or hardware regression suite: define pass criteria that certify
+    the twin behaves like the original.
+9.3 (lens: historical)
+    Learn from failed model-validation efforts; design a protocol that avoids their false
+    positives and holds fidelity above 0.9.
+9.4 (lens: inversion)
+    Instead of proving similarity, aggressively try to make the twin diverge; if it cannot, the
+    upload is verified.
+9.5 (lens: reduction)
+    Find the smallest set of behaviours whose match is sufficient to certify a faithful upload,
+    keeping the protocol simple but decisive.
+
+==============================================================================
+CATEGORY 10 — Human safety of the whole chain
+Goal: keep delivery, expression, and wave exposure inside every known safety limit with headroom.
+------------------------------------------------------------------------------
+10.1 (lens: historical)
+     Learn from past AAV and focused-ultrasound adverse events; design a pipeline that stays well
+     under intensity, mechanical-index, and viral-dose limits.
+10.2 (lens: reduction)
+     Reduce the safety problem to the three binding limits and keep generous headroom on each:
+     ultrasound intensity, mechanical index, and viral dose.
+10.3 (lens: inversion)
+     Design for reversibility first: assume everything must be switchable off, then build the
+     rest of the chain around that safety constraint.
+10.4 (lens: crossDomain)
+     Borrow safety-engineering practice from aviation and clinical trials to bound every risk in
+     the mapping chain before any human use.
+10.5 (lens: extreme)
+     Assume zero tolerance for harm; find the safest still-workable settings for delivery,
+     expression, and wave exposure.
+
+==============================================================================
+Tip: the cockpit now has a lens-count selector (3 / 5 / 10). Pick a topic and a prompt, choose
+how many lenses to run, and hit the lens tournament to see the ranked designs each lens invents.

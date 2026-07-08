@@ -45,6 +45,7 @@ class RankReq(BaseModel):
     topic: str
     prompt: str = ""
     backend: str = "auto"
+    n_lenses: int = 10             # run the first N of the 10 lenses (3 / 5 / 10)
 
 
 @app.get("/api/health")
@@ -80,7 +81,9 @@ def do_design(req: DesignReq) -> dict:
 def do_rank(req: RankReq) -> dict:
     if req.topic not in CATALOG:
         return {"error": f"unknown topic {req.topic!r}", "topics": all_ids()}
-    return {"ranked": rank(req.topic, req.prompt, backend=req.backend)}
+    n = max(1, min(int(req.n_lenses), len(LENSES)))
+    return {"ranked": rank(req.topic, req.prompt, lenses=list(LENSES)[:n], backend=req.backend),
+            "n_lenses": n}
 
 
 # --- static cockpit (mounted last so /api/* always wins) ---------------------

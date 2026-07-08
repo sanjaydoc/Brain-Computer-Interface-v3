@@ -40,6 +40,11 @@
         <label class="fld" for="prompt">prompt</label>
         <input class="txt" id="prompt" placeholder="e.g. acoustic reporters, deep, safe, aggressive" />
         <button class="btn" id="invent">✨ Invent + Simulate</button>
+        <label class="fld">lens tournament — how many lenses</label>
+        <div class="seg" id="lensn">
+          <button data-n="3">3</button><button data-n="5" class="on">5</button><button data-n="10">10</button>
+        </div>
+        <button class="btn ghost" id="tournament">🏆 Run lens tournament</button>
         <button class="btn ghost" id="all">grade all 10 topics</button>
         <div class="statrow" style="margin-top:.5rem"><span>engine</span><b id="backend">rule-based (browser)</b></div>
         <div class="stim-note small muted" style="margin-top:.3rem">Wire a local LLM (Qwen) via the Python backend — see RUN.md. The browser cockpit uses the deterministic proposer.</div>
@@ -71,6 +76,7 @@
       <ul class="list" id="c-assume"><li class="muted">—</li></ul>
       <div class="eyebrow">Risks</div>
       <ul class="list" id="c-risks"><li class="muted">—</li></ul>
+      <div id="tourn"></div>
     </aside>
   </main>
 

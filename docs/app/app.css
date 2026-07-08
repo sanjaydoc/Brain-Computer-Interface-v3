@@ -36,6 +36,16 @@ input.txt::placeholder { color: var(--faint); }
 .btn.ghost { background: #fff; color: var(--ink); border-color: var(--hair); font-weight: 600; }
 .btn.ghost:hover { border-color: var(--molecular); color: var(--molecular); }
 
+.seg { display: flex; gap: 0; border: 1px solid var(--hair); border-radius: 8px; overflow: hidden; margin-top: .2rem; }
+.seg button { flex: 1; padding: .34rem 0; border: 0; background: #fff; font-family: var(--sans); font-weight: 700; font-size: .82rem; color: var(--ink-2); cursor: pointer; border-right: 1px solid var(--hair); }
+.seg button:last-child { border-right: 0; }
+.seg button.on { background: var(--molecular); color: #fff; }
+.tourn-row { display: grid; grid-template-columns: auto 1fr auto; gap: .5rem; align-items: center; font-size: .78rem; padding: .2rem 0; border-bottom: 1px dashed var(--hair); }
+.tourn-row .ln { font-family: "JetBrains Mono", monospace; font-size: .7rem; color: var(--muted); }
+.tourn-row .sc { font-family: "JetBrains Mono", monospace; font-weight: 700; }
+.tourn-row .dot { width: 8px; height: 8px; border-radius: 50%; }
+.tourn-row .dot.p { background: var(--ok); } .tourn-row .dot.f { background: var(--no); }
+
 .statrow { display: flex; justify-content: space-between; align-items: baseline; font-size: .84rem; padding: .14rem 0; }
 .statrow span { color: var(--muted); } .statrow b { font-family: "JetBrains Mono", monospace; font-size: .8rem; }
 .pill { display: inline-block; font-size: .7rem; font-weight: 700; padding: 2px 9px; border-radius: 999px; color: #fff; }

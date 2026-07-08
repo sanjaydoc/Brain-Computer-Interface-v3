@@ -165,6 +165,44 @@ $('all').addEventListener('click', async () => {
   $('all').textContent = 'grade all 10 topics';
 });
 
+// ---- lens tournament (3 / 5 / 10 lenses) ----
+let nLenses = 5;
+document.querySelectorAll('#lensn button').forEach((b) => b.addEventListener('click', () => {
+  document.querySelectorAll('#lensn button').forEach((x) => x.classList.remove('on'));
+  b.classList.add('on'); nLenses = +b.dataset.n;
+}));
+
+async function tournament() {
+  const tid = $('topic').value, box = $('tourn');
+  const head = `<hr class="divider"/><div class="eyebrow">Lens tournament · ${nLenses} lenses</div>`;
+  box.innerHTML = head + '<div class="muted small">running…</div>';
+  $('tournament').textContent = '… running tournament';
+  let ranked = null, note = '';
+  if (apiUp) {
+    try {
+      const r = await fetch(API + '/api/rank', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ topic: tid, prompt: $('prompt').value, backend: 'auto', n_lenses: nLenses }),
+        signal: AbortSignal.timeout(180000),
+      });
+      const d = await r.json();
+      if (!d.error) ranked = d.ranked;
+    } catch { apiUp = false; }
+  }
+  if (!ranked) {
+    ranked = LENSES.slice(0, nLenses).map((ln) => {
+      const c = invent(tid, $('prompt').value), s = simulate(tid, c);
+      return { lens: ln, passed: s.passed, score: +s.score.toFixed(3), limiting: s.limiting };
+    }).sort((a, b) => b.score - a.score);
+    note = '<div class="muted small" style="margin:.2rem 0">Browser proposer is lens-agnostic — run <b>bci serve</b> with a local LLM for real per-lens diversity.</div>';
+  }
+  box.innerHTML = head + note + ranked.map((r) =>
+    `<div class="tourn-row"><span class="dot ${r.passed ? 'p' : 'f'}"></span>` +
+    `<span class="ln">${esc(r.lens)}</span><span class="sc">${(+r.score).toFixed(3)}</span></div>`).join('');
+  $('tournament').textContent = '🏆 Run lens tournament';
+}
+$('tournament').addEventListener('click', tournament);
+
 // ---- init ----
 $('topic').value = selected;
 (async () => {

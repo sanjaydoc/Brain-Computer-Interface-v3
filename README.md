@@ -4,10 +4,16 @@
 
 ### Invent past the 10 blockers — then let the laws of physics grade the invention.
 
-**A local-LLM invention engine paired with a law-based simulator. Pick one of the 10 mapping
-innovations, add a prompt, and the engine proposes a concrete design — which the simulator then
-grades against the laws of biophysics, physics, and electronics. Invention proposes; only the
-physics can move the score.**
+**Why this project exists:** building a **working, non-invasive brain-computer interface** — one that
+reads a whole human brain without surgery or electrodes — is blocked by **10 specific missing-link
+inventions** (mapped out in BCI v2). v3 is the engine built to **invent those 10 missing links**: for
+each blocker it proposes concrete, buildable designs and — crucially — grades every one against the
+hard laws of biophysics, physics, and electronics, so we keep only what could *physically* work.
+
+**How it works:** a local-LLM invention engine paired with a law-based simulator. Pick one of the 10
+missing-link innovations, add a prompt (constrained to **non-invasive / biomolecular** approaches by
+default — no electrodes), and the engine proposes a design that the simulator then grades. Invention
+proposes; only the physics can move the score — so a persuasive idea that violates a law still fails.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-0d0d0f.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-2f6fed.svg)](https://www.python.org/)
@@ -94,9 +100,10 @@ you get the kind of invention you actually want. Both flow through to the LLM pr
 
 ## 🔭 What this is
 
-v1 *interfaces* with a connectome. v2 *maps* it and measures the **10 blockers** that stand between
-today and a non-invasive human brain map. **v3 tries to invent past those blockers** — and refuses
-to take the invention's word for it:
+The goal of the whole program is a **working, non-invasive brain-computer interface**. v1
+*interfaces* with a connectome; v2 *maps* it and pins down the **10 missing-link inventions** — the
+blockers that stand between today and a non-invasive human brain map. **v3 exists to invent those 10
+missing links** — and refuses to take the invention's word for it, grading each against physical law:
 
 ```
  pick 1 of 10 topics  +  prompt

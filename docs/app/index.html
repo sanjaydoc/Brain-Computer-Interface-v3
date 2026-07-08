@@ -23,11 +23,31 @@
         bci <span class="muted">v3 · invention cockpit</span>
       </a>
       <div class="nav-links">
+        <button class="nav-btn" id="open-bench">📊 Benchmark</button>
         <button class="nav-btn" id="open-saved">📚 Saved inventions</button>
         <span class="muted small">invention proposes · only physics moves the score</span>
       </div>
     </div>
   </nav>
+
+  <div class="modal" id="bench" hidden>
+    <div class="modal-card">
+      <button class="modal-close" id="close-bench" title="close">✕</button>
+      <div class="eyebrow">Model leaderboard</div>
+      <h2>Benchmark</h2>
+      <p class="muted small" style="max-width:66ch">Sweep all 10 topics N times, grade every attempt, and rank pass-rate + mean score. Run it once per model (change <code>LOCAL_LLM_MODEL</code>) to A-B them — the physics simulator decides the winner.</p>
+      <div class="bench-controls">
+        <label class="mono small">samples / topic
+          <input type="number" id="bench-samples" min="1" max="10" value="2" /></label>
+        <button class="btn" id="run-bench">▶ Run benchmark</button>
+        <span class="muted small" id="bench-status"></span>
+      </div>
+      <div id="bench-result"></div>
+      <hr class="divider" />
+      <div class="eyebrow">Past runs</div>
+      <div id="bench-history"></div>
+    </div>
+  </div>
 
   <div class="modal" id="saved" hidden>
     <div class="modal-card">

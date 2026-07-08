@@ -287,6 +287,62 @@ $('open-saved').addEventListener('click', () => { $('saved').hidden = false; ren
 $('close-saved').addEventListener('click', () => { $('saved').hidden = true; });
 $('saved').addEventListener('click', (e) => { if (e.target.id === 'saved') $('saved').hidden = true; });
 
+// ---- benchmark leaderboard ----
+const TOPIC_TITLE = (t) => (TOPICS[t] ? TOPICS[t].title : t);
+
+function renderLeaderboard(res) {
+  const rows = Object.entries(res.per_topic || {})
+    .sort((a, b) => (b[1].mean_score - a[1].mean_score));
+  const head = `<div class="bench-head"><span>model <b>${esc(res.model || res.provider || 'rule-based')}</b></span>` +
+    `<span>samples/topic <b>${res.samples_per_topic}</b></span>` +
+    `<span>mean pass-rate <b>${res.mean_pass_rate}</b></span>` +
+    `<span>mean score <b>${res.mean_score}</b></span></div>`;
+  const body = rows.map(([tid, t]) =>
+    `<tr><td>${esc(TOPIC_TITLE(tid))}</td>` +
+    `<td>${t.pass_rate}</td>` +
+    `<td>${t.mean_score.toFixed(3)} <span class="bench-bar" style="width:${Math.round(t.mean_score * 60)}px"></span></td>` +
+    `<td>${t.best_score.toFixed(3)}</td><td>${t.samples}</td></tr>`).join('');
+  return head + `<table class="bench-table"><thead><tr><th>topic</th><th>pass-rate</th><th>mean</th><th>best</th><th>n</th></tr></thead><tbody>${body}</tbody></table>`;
+}
+
+async function runBench() {
+  if (!apiUp) { $('bench-result').innerHTML = '<div class="muted small">Benchmarking needs the Python backend — run <b>bci serve</b>.</div>'; return; }
+  const samples = Math.max(1, Math.min(10, +$('bench-samples').value || 2));
+  $('run-bench').disabled = true;
+  $('bench-status').textContent = `running ${samples}×10 = ${samples * 10} inventions…`;
+  try {
+    const r = await fetch(API + '/api/bench', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ samples, backend: 'auto', ground: false }),
+      signal: AbortSignal.timeout(600000),
+    });
+    const res = await r.json();
+    $('bench-result').innerHTML = renderLeaderboard(res);
+    $('bench-status').textContent = 'done · saved to benchmarks';
+    loadBenchHistory();
+  } catch (e) {
+    $('bench-status').textContent = 'failed (' + (e.name || 'error') + ')';
+  }
+  $('run-bench').disabled = false;
+}
+
+async function loadBenchHistory() {
+  if (!apiUp) { $('bench-history').innerHTML = '<div class="muted small">—</div>'; return; }
+  try {
+    const r = await fetch(API + '/api/benchmarks?limit=10', { signal: AbortSignal.timeout(4000) });
+    const rows = (await r.json()).benchmarks || [];
+    $('bench-history').innerHTML = rows.length ? rows.map((b) =>
+      `<div class="bench-run"><span>${esc(String(b.ts || '').slice(0, 19).replace('T', ' '))} · ${esc(b.model || b.provider || 'rule-based')}</span>` +
+      `<span>pass <b>${b.mean_pass_rate}</b> · score <b>${b.mean_score}</b> · n=${b.samples_per_topic}</span></div>`).join('')
+      : '<div class="muted small">no runs yet</div>';
+  } catch { $('bench-history').innerHTML = '<div class="muted small">—</div>'; }
+}
+
+$('open-bench').addEventListener('click', () => { $('bench').hidden = false; loadBenchHistory(); });
+$('close-bench').addEventListener('click', () => { $('bench').hidden = true; });
+$('bench').addEventListener('click', (e) => { if (e.target.id === 'bench') $('bench').hidden = true; });
+$('run-bench').addEventListener('click', runBench);
+
 // ---- init ----
 $('topic').value = selected;
 (async () => {

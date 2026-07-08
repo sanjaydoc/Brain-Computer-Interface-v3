@@ -108,7 +108,8 @@ async function runOne(tid, { save = false } = {}) {
       const ep = save ? '/api/record' : '/api/invent';
       const r = await fetch(API + ep, {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ topic: tid, prompt: $('prompt').value, lens: $('lens').value, backend: 'auto' }),
+        body: JSON.stringify({ topic: tid, prompt: $('prompt').value, lens: $('lens').value,
+                               backend: 'auto', ground: $('ground') ? $('ground').checked : false }),
         signal: AbortSignal.timeout(180000),
       });
       const d = await r.json();
@@ -118,7 +119,8 @@ async function runOne(tid, { save = false } = {}) {
         scores[tid] = { score: rec.score.score, passed: rec.score.passed, fidelity: rec.score.fidelity };
         return { cand: { title: rec.title, params: rec.params, mechanism: rec.mechanism, assumptions: rec.assumptions,
                          risks: rec.risks, lens: rec.lens, backend: rec.backend, provider: rec.provider },
-          s: rec.score, detail: rec.detail, parts: rec.parts, id: rec.id, saved: true, store: d.store };
+          s: rec.score, detail: rec.detail, parts: rec.parts, citations: rec.citations, grounded: rec.grounded,
+          id: rec.id, saved: true, store: d.store };
       }
       const res = d.result, cand = { ...d.candidate };
       scores[tid] = { score: res.score, passed: res.passed, fidelity: res.fidelity };
@@ -163,6 +165,13 @@ function showVerdict(tid, cand, s, extra = {}) {
       .map((k) => `<div class="detsec"><span class="lbl">${k}</span><p>${esc(det[k])}</p></div>`).join('') : '';
   $('c-parts').innerHTML = (parts && parts.length) ? '<div class="eyebrow" style="margin-top:.5rem">Parts</div>' +
     parts.map((p) => `<div class="part"><b>${esc(p.name)}</b><span>${esc(p.role)}</span></div>`).join('') : '';
+  const cites = extra.citations;
+  $('c-cites').innerHTML = (cites && cites.length)
+    ? `<div class="eyebrow" style="margin-top:.5rem">Grounded in literature (${cites.length})</div>` +
+      cites.slice(0, 8).map((c) => `<span class="cite"><span class="src">${esc(c.source)}</span>` +
+        `<a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a></span>`).join('')
+    : (extra.grounded === false && $('ground') && $('ground').checked
+        ? '<div class="eyebrow" style="margin-top:.5rem">Literature</div><div class="muted small">no results (offline or sources unreachable)</div>' : '');
   $('c-saved').textContent = extra.saved ? `✓ auto-saved to ${extra.store || 'database'} (id ${String(extra.id).slice(0, 10)})` : '';
 }
 

@@ -17,9 +17,10 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import bciv3
-from bciv3 import backends, invent, design, rank, report, all_ids, record, store
+from bciv3 import backends, invent, design, rank, report, all_ids, record, store, retrieve
 from bciv3.engine import LENSES
 from bciv3.innovations import CATALOG
+from bciv3.search import SOURCES
 
 app = FastAPI(title="BCI v3 — invention engine", version="0.1.0")
 app.add_middleware(
@@ -39,6 +40,12 @@ class InventReq(BaseModel):
 
 class DesignReq(InventReq):
     rounds: int = 3
+    ground: bool = True            # search literature / prior art and invent from it
+
+
+class SearchReq(BaseModel):
+    query: str
+    sources: list[str] | None = None
 
 
 class RankReq(BaseModel):
@@ -88,11 +95,22 @@ def do_rank(req: RankReq) -> dict:
 
 @app.post("/api/record")
 def do_record(req: DesignReq) -> dict:
-    """Invent → simulate → detail → save. Returns the full stored record."""
+    """Search → invent (grounded) → simulate → detail → save. Returns the full stored record."""
     if req.topic not in CATALOG:
         return {"error": f"unknown topic {req.topic!r}", "topics": all_ids()}
-    return {"record": record(req.topic, req.prompt, lens=req.lens, backend=req.backend, save=True),
-            "store": store.backend()}
+    return {"record": record(req.topic, req.prompt, lens=req.lens, backend=req.backend,
+                             ground=req.ground, save=True), "store": store.backend()}
+
+
+@app.post("/api/search")
+def do_search(req: SearchReq) -> dict:
+    """Preview what the retrieval layer finds for a query (no invention)."""
+    return retrieve(req.query, sources=req.sources)
+
+
+@app.get("/api/sources")
+def do_sources() -> dict:
+    return {"sources": list(SOURCES)}
 
 
 @app.get("/api/inventions")

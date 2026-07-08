@@ -30,7 +30,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e ".[dev,plot,api,db]"
 
-python -m pytest -q               # expect: 20 passed
+python -m pytest -q               # expect: 26 passed
 python scripts\demo_invent.py --plot
 ```
 
@@ -43,7 +43,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev,plot,api,db]"
 
-python -m pytest -q               # expect: 20 passed
+python -m pytest -q               # expect: 26 passed
 python scripts/demo_invent.py --plot
 ```
 
@@ -222,6 +222,35 @@ the 10 categories, each with a 🗑 delete button.
 > **No Mongo yet? It still works.** If Mongo is down or `pymongo` isn't installed, saves fall back
 > to a JSONL file (`inventions.jsonl`), and the browser cockpit saves to `localStorage`. Nothing
 > is lost — switch to Mongo whenever it's up.
+
+---
+
+## 4d. Literature grounding (PubMed, arXiv, patents, …)
+
+Every invention is **grounded in real prior art**: before Qwen invents, the engine searches
+**PubMed · arXiv · USPTO · PubChem · GitHub · SearXNG · Wikipedia** and feeds the results in as
+prior knowledge, then stores the citations with the record. Keyless for PubMed / arXiv / Wikipedia
+/ PubChem / USPTO — nothing to configure.
+
+```bash
+bci search "gas vesicle acoustic reporter genes brain"   # preview what the sources return
+bci record multiplexed_reporters "acoustic, deep, safe"  # grounded invention (search → invent → simulate → save)
+```
+
+In the cockpit, the **ground in literature** checkbox (on by default) controls it; retrieved
+citations show in the candidate aside and are saved to the record's `citations` field.
+
+**Optional config** (in `.env`):
+
+```ini
+# NCBI_API_KEY=...             # higher PubMed rate limits
+# GITHUB_TOKEN=...             # higher GitHub search rate limits
+# SEARXNG_URL=http://localhost:8080   # enables the SearXNG web-search source
+# BCIV3_SEARCH_SOURCES=pubmed,arxiv,wikipedia   # narrow the sources (default: all)
+```
+
+> Sources that fail, time out, or aren't configured contribute nothing — grounding never breaks a
+> run. Offline, inventions still work (ungrounded).
 
 ---
 

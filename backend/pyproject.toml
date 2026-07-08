@@ -19,7 +19,7 @@ api = ["fastapi>=0.110", "uvicorn>=0.29"]
 db = ["pymongo>=4.6"]
 
 [tool.setuptools]
-packages = ["bciv3", "bciv3.laws", "bciv3.innovations", "bciv3.engine", "bciv3.api"]
+packages = ["bciv3", "bciv3.laws", "bciv3.innovations", "bciv3.engine", "bciv3.api", "bciv3.search"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

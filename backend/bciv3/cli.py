@@ -46,6 +46,15 @@ def _record(args) -> int:
     return 0
 
 
+def _search(args) -> int:
+    import bciv3
+    res = bciv3.retrieve(args.query)
+    print(f"sources used: {', '.join(res['sources_used']) or 'none (offline / no results)'}")
+    for c in res["citations"]:
+        print(f"  [{c['source']:<9}] {c['title'][:70]}\n              {c['url']}")
+    return 0
+
+
 def _db(args) -> int:
     import bciv3
     if args.stats:
@@ -85,6 +94,10 @@ def main(argv=None) -> int:
     rc.add_argument("--lens", default="biomimicry")
     rc.add_argument("--backend", default="auto", choices=["auto", "llm", "fallback"])
     rc.set_defaults(fn=_record)
+
+    sr = sub.add_parser("search", help="preview retrieved literature / prior art for a query")
+    sr.add_argument("query")
+    sr.set_defaults(fn=_search)
 
     db = sub.add_parser("db", help="list saved inventions (or --stats)")
     db.add_argument("topic", nargs="?", default=None)

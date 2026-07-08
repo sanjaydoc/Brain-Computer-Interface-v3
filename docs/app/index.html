@@ -52,6 +52,7 @@
         <select id="lens"></select>
         <label class="fld" for="prompt">prompt</label>
         <input class="txt" id="prompt" placeholder="e.g. acoustic reporters, deep, safe, aggressive" />
+        <label class="chk"><input type="checkbox" id="ground" checked /> ground in literature (PubMed · arXiv · USPTO · Wikipedia …)</label>
         <button class="btn" id="invent">✨ Invent + Simulate</button>
         <label class="fld">lens tournament — how many lenses</label>
         <div class="seg" id="lensn">
@@ -91,6 +92,7 @@
       <ul class="list" id="c-risks"><li class="muted">—</li></ul>
       <div id="c-detail"></div>
       <div id="c-parts"></div>
+      <div id="c-cites"></div>
       <div class="mono small" id="c-saved" style="color:var(--venv); margin-top:.4rem"></div>
       <div id="tourn"></div>
     </aside>

@@ -68,28 +68,41 @@ def _rule_based(inv: Innovation, prompt: str) -> dict:
             "risks": ["assumptions unverified"], "noveltyScore": 0.5, "lens": "reduction", "backend": "fallback"}
 
 
-def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend: str = "auto") -> dict:
+def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend: str = "auto",
+           ground: bool = False, sources=None) -> dict:
     inv = get(topic_id)
     lens = lens if lens in LENSES else DEFAULT_LENS
     chosen = backend if backend != "auto" else ("llm" if llm.available() else "fallback")
 
+    # ground the design in real literature / prior art (PubMed, arXiv, Wikipedia, …)
+    citations, context = [], ""
+    if ground:
+        from ..search import retrieve
+        res = retrieve(f"{inv.title} {prompt}".strip())
+        citations, context = res["citations"], res["context"]
+
+    def _grounded(out: dict) -> dict:
+        out["citations"] = citations
+        out["grounded"] = bool(ground and citations)
+        return out
+
     if chosen == "llm":
         for _ in range(3):
             try:
-                parsed = llm.extract_json(llm.invoke_json(build_invent_prompt(inv, prompt, lens), max_tokens=2000))
+                parsed = llm.extract_json(llm.invoke_json(build_invent_prompt(inv, prompt, lens, context), max_tokens=2000))
             except Exception as exc:
-                return {**_rule_based(inv, prompt), "note": f"llm failed ({exc}); used fallback"}
+                return _grounded({**_rule_based(inv, prompt), "note": f"llm failed ({exc}); used fallback"})
             if parsed and parsed.get("params"):
-                return {"title": str(parsed.get("title") or inv.title)[:80],
+                return _grounded({"title": str(parsed.get("title") or inv.title)[:80],
                         "mechanism": str(parsed.get("mechanism") or "")[:400],
                         "domain": parsed.get("domain", inv.domain),
                         "params": _sanitize_params(inv, parsed.get("params")),
                         "assumptions": list(parsed.get("assumptions") or [])[:5],
                         "risks": list(parsed.get("risks") or [])[:5],
                         "noveltyScore": float(parsed.get("noveltyScore") or 0.7),
-                        "lens": lens, "backend": "llm", "provider": llm.provider()}
-        return {**_rule_based(inv, prompt), "note": "llm returned no usable design; used fallback"}
-    return _rule_based(inv, prompt)
+                        "lens": lens, "backend": "llm", "provider": llm.provider()})
+        return _grounded({**_rule_based(inv, prompt), "note": "llm returned no usable design; used fallback"})
+    return _grounded(_rule_based(inv, prompt))
 
 
 def backends() -> dict:

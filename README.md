@@ -11,7 +11,7 @@ physics can move the score.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-0d0d0f.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-2f6fed.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-20%20passing-0e9f6e.svg)](backend/tests)
+[![Tests](https://img.shields.io/badge/tests-26%20passing-0e9f6e.svg)](backend/tests)
 [![Topics](https://img.shields.io/badge/innovation%20topics-10-635bff.svg)](#-the-10-innovation-topics)
 [![Lenses](https://img.shields.io/badge/invention%20lenses-10-635bff.svg)](#-the-invention-engine)
 [![LLM](https://img.shields.io/badge/LLM-local%20Qwen%20first%20·%20NIM%20fallback-d98218.svg)](RUN.md)
@@ -51,11 +51,12 @@ _Author: **Dr. Sanjay Anbu**_
 - ✅ **Invent → simulate → refine loop** — failures feed the limiting number back to the engine.
 - ✅ **Candidate ranking** — one design per lens, ordered by simulated score (an idea tournament).
 - ✅ **Honest fidelity flags** — a pass means *physically admissible*, never *proven in a living brain*.
-- ✅ **20 tests, deterministic** — the whole pipeline runs offline in CI.
+- ✅ **26 tests, deterministic** — the whole pipeline runs offline in CI.
 - ✅ **Cockpit GUI** — v1's theme + cockpit view; pick a topic, invent, and watch the law simulator grade it live in the browser.
 - ✅ **Thin FastAPI backend** — the cockpit calls the Python engine (and your local Qwen) live; auto-detected, graceful browser fallback.
 - ✅ **`.env` config** — paste `LOCAL_LLM_URL` / `LOCAL_LLM_MODEL` / `NVIDIA_API_KEY` once (zero-dependency loader, git-ignored).
 - ✅ **Auto-save to a database** — every invention (design + multi-domain detail + parts + score) is captured in **MongoDB**, grouped by the 10 categories, with delete; JSONL fallback when Mongo is down.
+- ✅ **Literature grounding** — searches **PubMed · arXiv · USPTO · PubChem · GitHub · SearXNG · Wikipedia** and invents from the retrieved prior art; citations are stored with the record.
 - ⬜ **Amber topics as full estimators** — richer models for assembly / twin-sim at scale (Phase 4).
 
 ---
@@ -70,8 +71,12 @@ to take the invention's word for it:
  pick 1 of 10 topics  +  prompt
         │
         ▼
+ RETRIEVAL   (PubMed · arXiv · USPTO · PubChem · GitHub · SearXNG · Wikipedia)
+   → prior-art context to ground the design
+        │
+        ▼
  INVENTION ENGINE  (local Qwen, ported from inventor-studio-v3)
-   → candidate design: mechanism + parameters + assumptions + risks
+   → candidate design: mechanism + parameters + assumptions + risks + citations
         │
         ▼
  LAW SIMULATOR  — grades the parameters against:
@@ -80,7 +85,7 @@ to take the invention's word for it:
    🔌 electronics  (channels, bandwidth, scan-time, array feasibility)
         │
         ▼
- pass / fail  +  the limiting number  +  ranked candidates
+ pass / fail  +  limiting number  →  auto-save to MongoDB (grouped by category)
 ```
 
 The two halves are kept **separate on purpose**: a persuasive narrative can never fake a passing
@@ -126,7 +131,7 @@ reduction · scaling · future`
 cd backend
 python3 -m venv .venv && source .venv/bin/activate      # Windows: .\.venv\Scripts\Activate.ps1
 pip install -e ".[dev,plot,api,db]"
-python -m pytest -q                    # 20 passed
+python -m pytest -q                    # 26 passed
 python scripts/demo_invent.py --plot   # scorecard + docs/media/scorecard.png
 
 bci serve                              # API + cockpit on one port → http://localhost:8000/app/

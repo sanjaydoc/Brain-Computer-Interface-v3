@@ -24,10 +24,11 @@ LENSES = {
 DEFAULT_LENS = "biomimicry"
 
 
-def build_invent_prompt(inv: Innovation, user_prompt: str, lens: str) -> str:
+def build_invent_prompt(inv: Innovation, user_prompt: str, lens: str, context: str = "") -> str:
     directive = LENSES.get(lens, LENSES[DEFAULT_LENS])
     schema = ", ".join(f'"{k}": <number>' for k in inv.param_schema)
     laws = ", ".join(inv.laws)
+    grounding = f"\n\n{context}\nGround your design in the prior knowledge above where relevant.\n" if context else ""
     return f"""You are the {lens} Invention Agent for a non-invasive brain-mapping program.
 Invent ONE concrete design that solves the target below, then express it as parameters a physics
 simulator can grade. Output ONLY raw JSON, no markdown.
@@ -35,7 +36,7 @@ simulator can grade. Output ONLY raw JSON, no markdown.
 TARGET (innovation): {inv.title}
 DOMAIN: {inv.domain}   GOVERNING LAWS: {laws}
 SPEC (must meet): {inv.spec}
-USER PROMPT: {str(user_prompt or '').strip()[:300]}
+USER PROMPT: {str(user_prompt or '').strip()[:300]}{grounding}
 
 LENS — {directive}
 

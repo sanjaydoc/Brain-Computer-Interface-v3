@@ -135,32 +135,38 @@ reduction · scaling · future`
 
 ## ⚡ Quickstart
 
-Only requirement is **Python 3.10+**. (Optional: a local **Ollama + Qwen** for real invention,
+Requires **Python 3.10+** and **git**. (Optional: a local **Ollama + Qwen** for real invention,
 and **MongoDB** for storage — both auto-detected, both have graceful fallbacks.)
 
-### 1 · One-time setup — run in the **`backend/`** folder
+### 1 · Get the code, then set up in **`backend/`**
 
 **Windows (PowerShell)**
 ```powershell
+# first time — clone:
 git clone https://github.com/sanjaydoc/Brain-Computer-Interface-v3.git
-cd Brain-Computer-Interface-v3\backend          # ← run these here
+cd Brain-Computer-Interface-v3
+# already cloned — update instead:  cd Brain-Computer-Interface-v3 ; git pull origin main
 
+cd backend                                        # ← setup runs here
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned   # one-time, allows venv activate
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -e ".[dev,plot,api,db]"
-python -m pytest -q                              # expect: 29 passed
+python -m venv .venv                              # create the venv
+.\.venv\Scripts\Activate.ps1                      # ACTIVATE (prompt shows (.venv))
+pip install -e ".[dev,plot,api,db]"               # install dependencies
+python -m pytest -q                               # verify → 29 passed
 ```
 
 **macOS / Linux (bash / zsh)**
 ```bash
+# first time — clone:
 git clone https://github.com/sanjaydoc/Brain-Computer-Interface-v3.git
-cd Brain-Computer-Interface-v3/backend          # ← run these here
+cd Brain-Computer-Interface-v3
+# already cloned — update instead:  cd Brain-Computer-Interface-v3 && git pull origin main
 
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev,plot,api,db]"
-python -m pytest -q                              # expect: 29 passed
+cd backend                                        # ← setup runs here
+python3 -m venv .venv                             # create the venv
+source .venv/bin/activate                         # ACTIVATE (prompt shows (.venv))
+pip install -e ".[dev,plot,api,db]"               # install dependencies
+python -m pytest -q                               # verify → 29 passed
 ```
 
 ### 2 · Run the app — from the **repo root** (no `cd`, no activation)

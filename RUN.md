@@ -15,50 +15,91 @@ Only dependency for the core is **Python 3.10+**. `matplotlib` is optional (for 
 
 ---
 
-## 1. Clone
+## 0. Prerequisites
 
+- **Python 3.10+** and **git** (required). Check: `python --version` (Windows) / `python3 --version`.
+  - Windows: `winget install Python.Python.3.12 Git.Git`
+  - macOS: `brew install python git`
+  - Linux (Debian/Ubuntu): `sudo apt update && sudo apt install -y python3 python3-venv python3-pip git`
+- Optional: **Ollama + Qwen** (real invention) and **MongoDB Community** (storage). Both are
+  auto-detected; without them the engine uses a rule-based fallback + a JSONL file.
+
+---
+
+## 1. Get the code — clone (first time) **or** pull (update)
+
+**First time — clone:**
 ```bash
 git clone https://github.com/sanjaydoc/Brain-Computer-Interface-v3.git
 cd Brain-Computer-Interface-v3
 ```
-
 > Private repo — sign in with your GitHub username + a **Personal Access Token** (or SSH key).
+
+**Already cloned — pull the latest:**
+```bash
+cd Brain-Computer-Interface-v3
+git pull origin main
+```
+> After a pull, re-run the install step below only if dependencies changed (safe to run anytime).
 
 ---
 
-## 2. Install & verify
+## 2. Create the venv, activate it, install dependencies
+
+Do this in the **`backend/`** folder. The virtual environment (`.venv`) keeps this project's
+packages isolated from your system Python.
 
 ### Windows (PowerShell)
 
 ```powershell
 cd backend
 
-# one-time only: allow the venv activate script to run
+# (one-time only) allow the venv's activate script to run:
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
+# 1) create the venv
 python -m venv .venv
+
+# 2) ACTIVATE it — your prompt then shows (.venv)
 .\.venv\Scripts\Activate.ps1
+
+# 3) install dependencies (everything: tests, plot, API, database)
 pip install -e ".[dev,plot,api,db]"
 
+# 4) verify
 python -m pytest -q               # expect: 29 passed
-python scripts\demo_invent.py --plot
 ```
 
-### Linux / macOS (bash / zsh)
+### macOS (bash / zsh)
 
 ```bash
 cd backend
 
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -e ".[dev,plot,api,db]"
-
-python -m pytest -q               # expect: 29 passed
-python scripts/demo_invent.py --plot
+python3 -m venv .venv             # 1) create
+source .venv/bin/activate         # 2) ACTIVATE — prompt shows (.venv)
+pip install -e ".[dev,plot,api,db]"   # 3) install
+python -m pytest -q               # 4) verify → 29 passed
 ```
 
-`demo_invent.py` invents a design for each of the 10 topics, grades every one against the law
-simulator, prints a scorecard, and writes `docs/media/scorecard.png`.
+### Linux (bash)
+
+```bash
+cd backend
+
+python3 -m venv .venv             # 1) create
+source .venv/bin/activate         # 2) ACTIVATE — prompt shows (.venv)
+pip install -e ".[dev,plot,api,db]"   # 3) install
+python -m pytest -q               # 4) verify → 29 passed
+```
+
+**Re-activating later** (each new terminal): from the repo root, run
+`.\backend\.venv\Scripts\Activate.ps1` (Windows) or `source backend/.venv/bin/activate`
+(macOS/Linux). To leave the venv: `deactivate`.
+
+Optional sanity check — invents + grades all 10 topics and writes a scorecard graph:
+```bash
+python scripts/demo_invent.py --plot      # (Windows: python scripts\demo_invent.py --plot)
+```
 
 ---
 

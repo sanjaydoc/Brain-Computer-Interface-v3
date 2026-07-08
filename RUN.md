@@ -28,9 +28,9 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install -e ".[dev,plot,api]"
+pip install -e ".[dev,plot,api,db]"
 
-python -m pytest -q               # expect: 15 passed
+python -m pytest -q               # expect: 20 passed
 python scripts\demo_invent.py --plot
 ```
 
@@ -41,9 +41,9 @@ cd backend
 
 python3 -m venv .venv
 source .venv/bin/activate
-pip install -e ".[dev,plot,api]"
+pip install -e ".[dev,plot,api,db]"
 
-python -m pytest -q               # expect: 15 passed
+python -m pytest -q               # expect: 20 passed
 python scripts/demo_invent.py --plot
 ```
 
@@ -251,5 +251,5 @@ print(bciv3.LENSES)               # the 10 invention lenses
 
 ```bash
 git pull origin main
-cd backend && pip install -e ".[dev,plot,api]"
+cd backend && pip install -e ".[dev,plot,api,db]"
 ```

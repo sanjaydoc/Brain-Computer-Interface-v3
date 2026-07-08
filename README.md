@@ -11,7 +11,7 @@ physics can move the score.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-0d0d0f.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-2f6fed.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-15%20passing-0e9f6e.svg)](backend/tests)
+[![Tests](https://img.shields.io/badge/tests-20%20passing-0e9f6e.svg)](backend/tests)
 [![Topics](https://img.shields.io/badge/innovation%20topics-10-635bff.svg)](#-the-10-innovation-topics)
 [![Lenses](https://img.shields.io/badge/invention%20lenses-10-635bff.svg)](#-the-invention-engine)
 [![LLM](https://img.shields.io/badge/LLM-local%20Qwen%20first%20·%20NIM%20fallback-d98218.svg)](RUN.md)
@@ -51,7 +51,7 @@ _Author: **Dr. Sanjay Anbu**_
 - ✅ **Invent → simulate → refine loop** — failures feed the limiting number back to the engine.
 - ✅ **Candidate ranking** — one design per lens, ordered by simulated score (an idea tournament).
 - ✅ **Honest fidelity flags** — a pass means *physically admissible*, never *proven in a living brain*.
-- ✅ **15 tests, deterministic** — the whole pipeline runs offline in CI.
+- ✅ **20 tests, deterministic** — the whole pipeline runs offline in CI.
 - ✅ **Cockpit GUI** — v1's theme + cockpit view; pick a topic, invent, and watch the law simulator grade it live in the browser.
 - ✅ **Thin FastAPI backend** — the cockpit calls the Python engine (and your local Qwen) live; auto-detected, graceful browser fallback.
 - ✅ **`.env` config** — paste `LOCAL_LLM_URL` / `LOCAL_LLM_MODEL` / `NVIDIA_API_KEY` once (zero-dependency loader, git-ignored).
@@ -125,8 +125,8 @@ reduction · scaling · future`
 ```bash
 cd backend
 python3 -m venv .venv && source .venv/bin/activate      # Windows: .\.venv\Scripts\Activate.ps1
-pip install -e ".[dev,plot,api]"
-python -m pytest -q                    # 15 passed
+pip install -e ".[dev,plot,api,db]"
+python -m pytest -q                    # 20 passed
 python scripts/demo_invent.py --plot   # scorecard + docs/media/scorecard.png
 
 bci serve                              # API + cockpit on one port → http://localhost:8000/app/
@@ -160,8 +160,14 @@ backend/bciv3/
   innovations/         the 10 topics — base.py (abstraction) + catalog.py (specs + evaluators)
   engine/              invention pipeline: prompt.py (10 lenses) · inventor.py · loop.py
   simulator.py         route a candidate to its laws → Score
-backend/tests/         13 deterministic tests
+  detailer.py          multi-domain summary (biophysics/physics/electronics/biology) + parts
+  recorder.py          invent → simulate → detail → save (one timestamped record)
+  store.py             MongoDB persistence (+ JSONL fallback): save / list / grouped / delete
+  cli.py               `bci` CLI: serve · invent · record · db · topics
+  api/app.py           FastAPI: serves the cockpit + /api/{invent,record,inventions,rank,stats}
+backend/tests/         20 deterministic tests
 backend/scripts/       demo_invent.py
+docs/app/              the cockpit GUI (v1 theme) — served by `bci serve`
 ```
 
 ---

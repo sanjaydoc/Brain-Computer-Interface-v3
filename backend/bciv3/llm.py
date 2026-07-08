@@ -94,14 +94,55 @@ def _json_mode_enabled() -> bool:
     return os.environ.get("BCI_LLM_JSON_MODE", "on").lower() not in ("off", "0", "false", "no")
 
 
+def current_model() -> str | None:
+    """The model name that would be used right now (per provider default), or None if no provider."""
+    p = provider()
+    if p == "local":
+        return os.environ.get("LOCAL_LLM_MODEL", "qwen2.5:7b")
+    if p == "nvidia":
+        return os.environ.get("BCI_LLM_MODEL", "qwen/qwen2.5-7b-instruct")
+    if p == "openai":
+        return os.environ.get("BCI_LLM_MODEL", "gpt-4o-mini")
+    if p == "openrouter":
+        return os.environ.get("BCI_LLM_MODEL", "qwen/qwen-2.5-7b-instruct")
+    if p == "anthropic":
+        return os.environ.get("BCI_LLM_MODEL", "claude-sonnet-5")
+    return None
+
+
+def list_models() -> dict:
+    """Auto-detect the models the active provider can serve, for the GUI dropdown.
+
+    For a local OpenAI-compatible server (Ollama / vLLM / LM Studio) it queries ``{base}/models``
+    — Ollama returns every tag you've pulled. Returns ``{provider, current, models:[...]}``; on any
+    failure ``models`` just contains the current default so the dropdown is never empty."""
+    p = provider()
+    cur = current_model()
+    models: list[str] = []
+    if p == "local":
+        try:
+            base = os.environ["LOCAL_LLM_URL"].rstrip("/")
+            req = urllib.request.Request(f"{base}/models",
+                                         headers={"Authorization": "Bearer local-no-auth"})
+            with urllib.request.urlopen(req, timeout=4.0) as resp:
+                data = json.loads(resp.read().decode())
+            models = [m.get("id") for m in data.get("data", []) if m.get("id")]
+        except Exception:
+            models = []
+    if cur and cur not in models:
+        models.insert(0, cur)
+    return {"provider": p, "current": cur, "models": models}
+
+
 def invoke_json(prompt: str, max_tokens: int = 2000, timeout: float = 300.0,
-                json_mode: bool | None = None) -> str:
+                json_mode: bool | None = None, model: str | None = None) -> str:
     """Return raw model text (expected JSON). Raises if no provider / on failure.
 
     For thinking models (Qwen3, etc.) the default token budget is generous so the JSON that
     follows the reasoning isn't truncated. Set ``BCI_LLM_NO_THINK=1`` to append ``/no_think`` —
     Qwen3 then skips the reasoning block entirely, for faster, cleaner structured output.
-    ``json_mode`` overrides the ``BCI_LLM_JSON_MODE`` env (see ``_json_mode_enabled``)."""
+    ``json_mode`` overrides the ``BCI_LLM_JSON_MODE`` env (see ``_json_mode_enabled``).
+    ``model`` overrides the provider's default model for this one call (the GUI model picker)."""
     if os.environ.get("BCI_LLM_NO_THINK") in ("1", "true", "yes"):
         prompt = prompt + "\n/no_think"
     timeout = float(os.environ.get("BCI_LLM_TIMEOUT", timeout))    # local 9B cold-loads are slow
@@ -109,22 +150,22 @@ def invoke_json(prompt: str, max_tokens: int = 2000, timeout: float = 300.0,
     p = provider()
     if p == "local":
         return _chat(os.environ["LOCAL_LLM_URL"], os.environ.get("LOCAL_LLM_KEY"),
-                     os.environ.get("LOCAL_LLM_MODEL", "qwen2.5:7b"), prompt, max_tokens, timeout, jm)
+                     model or os.environ.get("LOCAL_LLM_MODEL", "qwen2.5:7b"), prompt, max_tokens, timeout, jm)
     if p == "nvidia":
         key = os.environ.get("NVIDIA_API_KEY") or os.environ["NGC_API_KEY"]
-        return _chat(NVIDIA_BASE, key, os.environ.get("BCI_LLM_MODEL", "qwen/qwen2.5-7b-instruct"),
+        return _chat(NVIDIA_BASE, key, model or os.environ.get("BCI_LLM_MODEL", "qwen/qwen2.5-7b-instruct"),
                      prompt, max_tokens, timeout, jm)
     if p == "openai":
         return _chat(OPENAI_BASE, os.environ["OPENAI_API_KEY"],
-                     os.environ.get("BCI_LLM_MODEL", "gpt-4o-mini"), prompt, max_tokens, timeout, jm)
+                     model or os.environ.get("BCI_LLM_MODEL", "gpt-4o-mini"), prompt, max_tokens, timeout, jm)
     if p == "openrouter":
         return _chat(OPENROUTER_BASE, os.environ["OPENROUTER_API_KEY"],
-                     os.environ.get("BCI_LLM_MODEL", "qwen/qwen-2.5-7b-instruct"), prompt, max_tokens, timeout, jm)
+                     model or os.environ.get("BCI_LLM_MODEL", "qwen/qwen-2.5-7b-instruct"), prompt, max_tokens, timeout, jm)
     if p == "anthropic":
         data = _post("https://api.anthropic.com/v1/messages",
                      {"x-api-key": os.environ["ANTHROPIC_API_KEY"], "anthropic-version": "2023-06-01",
                       "content-type": "application/json"},
-                     {"model": os.environ.get("BCI_LLM_MODEL", "claude-sonnet-5"), "max_tokens": max_tokens,
+                     {"model": model or os.environ.get("BCI_LLM_MODEL", "claude-sonnet-5"), "max_tokens": max_tokens,
                       "temperature": 0.6, "messages": [{"role": "user", "content": prompt}]}, timeout)
         return "".join(b.get("text", "") for b in data.get("content", []))
     raise RuntimeError("no LLM provider configured (set LOCAL_LLM_URL / NVIDIA_API_KEY / …)")

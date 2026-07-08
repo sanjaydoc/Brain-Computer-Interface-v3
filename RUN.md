@@ -248,6 +248,34 @@ All optional, all settable in `backend/.env`. Run `bci ping` to see which you ne
 # BCI_LLM_NO_THINK=1       # thinking models only (qwen3.5) — skip the reasoning block for speed
 ```
 
+### Choose the model in the cockpit GUI (auto-detected)
+
+The cockpit has an **LLM model** dropdown that **auto-detects every model you've pulled** — it calls
+`/api/models`, which queries your local server's `{LOCAL_LLM_URL}/models` (Ollama lists all tags).
+Pick one and hit **Invent + Simulate**; the engine line shows the active model
+(`local · qwen2.5:3b (backend)`), and each saved record stores which model produced it — so you can
+A-B two models and let the simulator score decide.
+
+**`.env` setup for a 7B ⇄ 3B choice.** Pull both models, then set the *default* in `backend/.env`;
+the GUI dropdown overrides it per run (leave the dropdown on the default to use `.env`):
+
+```bash
+ollama pull qwen2.5:7b        # quality default
+ollama pull qwen2.5:3b        # faster on a modest box
+```
+```ini
+# backend/.env
+LOCAL_LLM_URL=http://localhost:11434/v1
+LOCAL_LLM_MODEL=qwen2.5:7b    # the default; the GUI dropdown can switch to qwen2.5:3b per run
+```
+
+Then `bci serve`, open the cockpit, and the dropdown shows **both** (plus any other tags you've
+pulled). No code change to add a model — just `ollama pull <tag>` and reload the page.
+
+> The dropdown is **backend-only**: it's live when the Python backend is running (`bci serve`);
+> in the static browser-only cockpit it's greyed to "backend only". From the terminal, the same
+> choice is `LOCAL_LLM_MODEL=… bci record …` (or `$env:LOCAL_LLM_MODEL="…"; bci record …`).
+
 ### Thinking models (Qwen3.5, DeepSeek-R1)
 
 Qwen3.5 **reasons before answering** (the `Thinking…` block). The engine handles this: it strips

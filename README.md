@@ -34,6 +34,26 @@ _Author: **Dr. Sanjay Anbu**_
 > live: the verdict card (pass/fail + limiting number + metrics), the candidate design aside
 > (proposed parameters + assumptions + risks), and the scorecard for all 10 topics.
 
+<table>
+<tr>
+<td width="38%"><img src="docs/media/model_picker.png" alt="GUI model picker — auto-detected models" /></td>
+<td><b>Pick the model in the GUI.</b> The cockpit calls <code>/api/models</code> and lists every
+model your local server (Ollama) has pulled — here <b>3 detected</b>, with <code>qwen2.5:3b</code>
+selected. Switch it and hit <b>Invent + Simulate</b>; the engine line shows the active model
+(<code>local · qwen2.5:3b (backend)</code>) and every saved record stores which model produced it,
+so you can A-B them and let the physics simulator decide the winner. Leave it on the default to use
+your <code>backend/.env</code> <code>LOCAL_LLM_MODEL</code>.</td>
+</tr>
+</table>
+
+![A real local-Qwen invention, read in full](docs/media/llm_invention.png)
+
+> **A real invention from local Qwen** (`bci record snr_depth "focused ultrasound, deep cortex,
+> low thermal dose, safe"`) — the biomimicry lens turned an eardrum into a focused-ultrasound
+> transducer array. Every invention is captured in full: mechanism, the law simulator's per-domain
+> read (biophysics · physics · electronics · biology), proposed parameters, materials, protocol,
+> parts, assumptions, and risks — click any saved invention to read it like this.
+
 ![Invented designs graded by the law simulator](docs/media/scorecard.png)
 
 > The same run as a static graph. Green = the proposed design is **physically admissible
@@ -62,6 +82,7 @@ _Author: **Dr. Sanjay Anbu**_
 - ✅ **Cockpit GUI** — v1's theme + cockpit view; pick a topic, invent, and watch the law simulator grade it live in the browser.
 - ✅ **Thin FastAPI backend** — the cockpit calls the Python engine (and your local Qwen) live; auto-detected, graceful browser fallback.
 - ✅ **`.env` config** — paste `LOCAL_LLM_URL` / `LOCAL_LLM_MODEL` / `NVIDIA_API_KEY` once (zero-dependency loader, git-ignored).
+- ✅ **GUI model picker** — the cockpit **auto-detects the models you've pulled** (Ollama) and lets you choose which one invents; each record stores its model, so the simulator A-Bs them.
 - ✅ **Auto-save to a database** — every invention (design + multi-domain detail + parts + score) is captured in **MongoDB**, grouped by the 10 categories, with delete; JSONL fallback when Mongo is down.
 - ✅ **Literature grounding** — searches **PubMed · arXiv · USPTO · PubChem · GitHub · SearXNG · Wikipedia** and invents from the retrieved prior art; citations are stored with the record.
 - ✅ **Benchmark** — `bci bench` sweeps topics × N samples → pass-rate + mean-score leaderboard per category (A-B models), saved to the DB.
@@ -254,7 +275,7 @@ backend/bciv3/
   recorder.py          invent → simulate → detail → save (one timestamped record)
   store.py             MongoDB persistence (+ JSONL fallback): save / list / grouped / delete
   cli.py               `bci` CLI: serve · ping · invent · record · bench · db · topics · search
-  api/app.py           FastAPI: serves the cockpit + /api/{invent,record,inventions,rank,stats}
+  api/app.py           FastAPI: serves the cockpit + /api/{invent,record,inventions,rank,models,stats}
 backend/tests/         29 deterministic tests
 backend/scripts/       demo_invent.py
 docs/app/              the cockpit GUI (v1 theme) — served by `bci serve`

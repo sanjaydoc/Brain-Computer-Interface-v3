@@ -36,6 +36,7 @@ class InventReq(BaseModel):
     prompt: str = ""
     lens: str = "biomimicry"
     backend: str = "auto"          # auto | llm | fallback
+    model: str | None = None       # override the LLM model for this call (GUI model picker)
 
 
 class DesignReq(InventReq):
@@ -53,6 +54,7 @@ class RankReq(BaseModel):
     prompt: str = ""
     backend: str = "auto"
     n_lenses: int = 10             # run the first N of the 10 lenses (3 / 5 / 10)
+    model: str | None = None       # override the LLM model for this call (GUI model picker)
 
 
 @app.get("/api/health")
@@ -73,7 +75,7 @@ def topics() -> dict:
 def do_invent(req: InventReq) -> dict:
     if req.topic not in CATALOG:
         return {"error": f"unknown topic {req.topic!r}", "topics": all_ids()}
-    cand = invent(req.topic, req.prompt, lens=req.lens, backend=req.backend)
+    cand = invent(req.topic, req.prompt, lens=req.lens, backend=req.backend, model=req.model)
     return {"candidate": cand, "result": report(req.topic, cand)}
 
 
@@ -81,7 +83,7 @@ def do_invent(req: InventReq) -> dict:
 def do_design(req: DesignReq) -> dict:
     if req.topic not in CATALOG:
         return {"error": f"unknown topic {req.topic!r}", "topics": all_ids()}
-    return design(req.topic, req.prompt, rounds=req.rounds, lens=req.lens, backend=req.backend)
+    return design(req.topic, req.prompt, rounds=req.rounds, lens=req.lens, backend=req.backend, model=req.model)
 
 
 @app.post("/api/rank")
@@ -89,7 +91,7 @@ def do_rank(req: RankReq) -> dict:
     if req.topic not in CATALOG:
         return {"error": f"unknown topic {req.topic!r}", "topics": all_ids()}
     n = max(1, min(int(req.n_lenses), len(LENSES)))
-    return {"ranked": rank(req.topic, req.prompt, lenses=list(LENSES)[:n], backend=req.backend),
+    return {"ranked": rank(req.topic, req.prompt, lenses=list(LENSES)[:n], backend=req.backend, model=req.model),
             "n_lenses": n}
 
 
@@ -99,7 +101,14 @@ def do_record(req: DesignReq) -> dict:
     if req.topic not in CATALOG:
         return {"error": f"unknown topic {req.topic!r}", "topics": all_ids()}
     return {"record": record(req.topic, req.prompt, lens=req.lens, backend=req.backend,
-                             ground=req.ground, save=True), "store": store.backend()}
+                             ground=req.ground, save=True, model=req.model), "store": store.backend()}
+
+
+@app.get("/api/models")
+def do_models() -> dict:
+    """Auto-detected models the active provider can serve — powers the GUI model picker."""
+    import bciv3
+    return bciv3.llm.list_models()
 
 
 @app.post("/api/search")

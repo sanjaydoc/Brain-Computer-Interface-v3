@@ -69,7 +69,7 @@ def _rule_based(inv: Innovation, prompt: str) -> dict:
 
 
 def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend: str = "auto",
-           ground: bool = False, sources=None) -> dict:
+           ground: bool = False, sources=None, model: str | None = None) -> dict:
     inv = get(topic_id)
     lens = lens if lens in LENSES else DEFAULT_LENS
     chosen = backend if backend != "auto" else ("llm" if llm.available() else "fallback")
@@ -94,7 +94,8 @@ def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend
         for _ in range(3):
             t0 = time.monotonic()
             try:
-                parsed = llm.extract_json(llm.invoke_json(build_invent_prompt(inv, prompt, lens, context), max_tokens=max_tok))
+                parsed = llm.extract_json(llm.invoke_json(build_invent_prompt(inv, prompt, lens, context),
+                                                           max_tokens=max_tok, model=model))
             except Exception as exc:
                 dt = round(time.monotonic() - t0, 1)
                 return _grounded({**_rule_based(inv, prompt), "note": f"llm failed ({exc} after {dt}s); used fallback"})
@@ -113,7 +114,8 @@ def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend
                         "noveltyScore": _num("noveltyScore", 0.7),
                         "feasibilityScore": _num("feasibilityScore", 0.6),
                         "impactScore": _num("impactScore", 0.7),
-                        "lens": lens, "backend": "llm", "provider": llm.provider()})
+                        "lens": lens, "backend": "llm", "provider": llm.provider(),
+                        "model": model or llm.current_model()})
         return _grounded({**_rule_based(inv, prompt), "note": "llm returned no usable design; used fallback"})
     return _grounded(_rule_based(inv, prompt))
 

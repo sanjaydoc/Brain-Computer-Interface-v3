@@ -15,10 +15,10 @@ from .prompt import LENSES, build_refine_prompt
 
 
 def design(topic_id: str, prompt: str = "", *, rounds: int = 2, lens: str = "biomimicry",
-           backend: str = "auto") -> dict:
+           backend: str = "auto", model: str | None = None) -> dict:
     """Invent → simulate → (on fail) refine, up to `rounds`. Returns the best candidate + history."""
     inv = get(topic_id)
-    cand = invent(topic_id, prompt, lens=lens, backend=backend)
+    cand = invent(topic_id, prompt, lens=lens, backend=backend, model=model)
     score = simulate(topic_id, cand)
     history = [{"candidate": cand, "score": score.as_dict()}]
 
@@ -51,12 +51,12 @@ def _refine(inv, prev, score, backend):
 
 
 def rank(topic_id: str, prompt: str = "", *, lenses: list[str] | None = None,
-         backend: str = "auto") -> list[dict]:
+         backend: str = "auto", model: str | None = None) -> list[dict]:
     """Generate one candidate per lens, grade them, and return them best-first."""
     lenses = lenses or list(LENSES)
     out = []
     for ln in lenses:
-        c = invent(topic_id, prompt, lens=ln, backend=backend)
+        c = invent(topic_id, prompt, lens=ln, backend=backend, model=model)
         s = simulate(topic_id, c)
         out.append({"lens": ln, "passed": s.passed, "score": round(s.score, 3),
                     "limiting": s.limiting, "title": c.get("title", ""), "params": c.get("params", {})})

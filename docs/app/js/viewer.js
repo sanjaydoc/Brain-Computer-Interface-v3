@@ -23,6 +23,48 @@ async function probeApi() {
   } catch { apiUp = false; }
 }
 
+// The chosen LLM model, or '' to use the backend/.env default. Auto-detected from the provider.
+const modelVal = () => ($('model') && $('model').value) || '';
+
+async function loadModels() {
+  const sel = $('model'), lbl = $('model-lbl'), hint = $('model-hint');
+  if (!sel) return;
+  if (!apiUp) {                                   // browser-only mode — no live model list
+    sel.innerHTML = '<option value="">backend only</option>';
+    sel.disabled = true; if (lbl) lbl.style.opacity = 0.5;
+    if (hint) hint.textContent = '(run bci serve)';
+    return;
+  }
+  try {
+    const r = await fetch(API + '/api/models', { signal: AbortSignal.timeout(4000) });
+    const d = await r.json();
+    const models = d.models || [];
+    sel.innerHTML = '';
+    if (!models.length) {                          // no LLM wired — default to .env / rule-based
+      sel.innerHTML = '<option value="">provider default</option>';
+      sel.disabled = true; if (hint) hint.textContent = d.provider ? '(none detected)' : '(no LLM)';
+      return;
+    }
+    for (const m of models) {
+      const o = document.createElement('option'); o.value = m; o.textContent = m;
+      sel.appendChild(o);
+    }
+    sel.value = d.current && models.includes(d.current) ? d.current : models[0];
+    sel.disabled = false; if (lbl) lbl.style.opacity = 1;
+    if (hint) hint.textContent = `· ${models.length} detected`;
+    syncEngineLabel();
+  } catch {
+    sel.innerHTML = '<option value="">provider default</option>'; sel.disabled = true;
+  }
+}
+
+// reflect the active provider + chosen model in the engine card
+function syncEngineLabel() {
+  if (!apiUp) return;
+  const m = modelVal();
+  $('backend').textContent = apiProvider ? `${apiProvider}${m ? ' · ' + m : ''} (backend)` : 'backend (no LLM)';
+}
+
 // ---- populate selectors ----
 for (const tid of TOPIC_IDS) {
   const o = document.createElement('option');
@@ -109,7 +151,8 @@ async function runOne(tid, { save = false } = {}) {
       const r = await fetch(API + ep, {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ topic: tid, prompt: $('prompt').value, lens: $('lens').value,
-                               backend: 'auto', ground: $('ground') ? $('ground').checked : false }),
+                               backend: 'auto', model: modelVal() || null,
+                               ground: $('ground') ? $('ground').checked : false }),
         signal: AbortSignal.timeout(180000),
       });
       const d = await r.json();
@@ -230,7 +273,8 @@ async function tournament() {
     try {
       const r = await fetch(API + '/api/rank', {
         method: 'POST', headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ topic: tid, prompt: $('prompt').value, backend: 'auto', n_lenses: nLenses }),
+        body: JSON.stringify({ topic: tid, prompt: $('prompt').value, backend: 'auto',
+                               n_lenses: nLenses, model: modelVal() || null }),
         signal: AbortSignal.timeout(180000),
       });
       const d = await r.json();
@@ -402,8 +446,10 @@ $('run-bench').addEventListener('click', runBench);
 
 // ---- init ----
 $('topic').value = selected;
+if ($('model')) $('model').addEventListener('change', syncEngineLabel);
 (async () => {
   await probeApi();
+  await loadModels();
   const { cand, s } = await runOne(selected); showVerdict(selected, cand, s); draw();
 })();
 resize();

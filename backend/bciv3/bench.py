@@ -18,7 +18,7 @@ from .recorder import record
 
 def run(*, topics=None, samples: int = 3, prompt: str = "", backend: str = "auto",
         ground: bool = False, lens: str = "biomimicry", save_attempts: bool = False,
-        save_summary: bool = True, model: str | None = None) -> dict:
+        save_summary: bool = True, model: str | None = None, constraint: str | None = None) -> dict:
     """Run the sweep. `save_attempts` persists every invention to the DB (off by default to avoid
     flooding it); `save_summary` stores the compact leaderboard in the `benchmarks` collection.
     `model` overrides the LLM model for this whole sweep (A-B two models head-to-head)."""
@@ -28,7 +28,7 @@ def run(*, topics=None, samples: int = 3, prompt: str = "", backend: str = "auto
         scores, passes = [], 0
         for _ in range(max(1, samples)):
             rec = record(tid, prompt, lens=lens, backend=backend, ground=ground,
-                         save=save_attempts, model=model)
+                         save=save_attempts, model=model, constraint=constraint)
             sc = rec["score"]
             scores.append(sc["score"]); passes += 1 if sc["passed"] else 0
         n = len(scores)

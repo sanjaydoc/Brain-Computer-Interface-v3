@@ -36,13 +36,14 @@ _Author: **Dr. Sanjay Anbu**_
 
 <table>
 <tr>
-<td width="38%"><img src="docs/media/model_picker.png" alt="GUI model picker — auto-detected models" /></td>
-<td><b>Pick the model in the GUI.</b> The cockpit calls <code>/api/models</code> and lists every
-model your local server (Ollama) has pulled — here <b>3 detected</b>, with <code>qwen2.5:3b</code>
-selected. Switch it and hit <b>Invent + Simulate</b>; the engine line shows the active model
-(<code>local · qwen2.5:3b (backend)</code>) and every saved record stores which model produced it,
-so you can A-B them and let the physics simulator decide the winner. Leave it on the default to use
-your <code>backend/.env</code> <code>LOCAL_LLM_MODEL</code>.</td>
+<td width="38%"><img src="docs/media/model_picker.png" alt="GUI model picker + approach constraint" /></td>
+<td><b>Pick the model — and constrain the approach — in the GUI.</b> The cockpit calls
+<code>/api/models</code> and lists every model your local server (Ollama) has pulled (here <b>3
+detected</b>), and each saved record stores which model produced it, so you can A-B them and let the
+simulator decide. The <b>approach constraint</b> selector restricts <i>how</i> the design may
+interface with the brain — <b>Non-invasive · biomolecules</b> (default; forbids electrodes/implants/
+surgery and forces molecular reporters + non-contact readout) or <b>Invasive · electrodes</b> — so
+you get the kind of invention you actually want. Both flow through to the LLM prompt.</td>
 </tr>
 </table>
 
@@ -83,6 +84,7 @@ your <code>backend/.env</code> <code>LOCAL_LLM_MODEL</code>.</td>
 - ✅ **Thin FastAPI backend** — the cockpit calls the Python engine (and your local Qwen) live; auto-detected, graceful browser fallback.
 - ✅ **`.env` config** — paste `LOCAL_LLM_URL` / `LOCAL_LLM_MODEL` / `NVIDIA_API_KEY` once (zero-dependency loader, git-ignored).
 - ✅ **GUI model picker** — the cockpit **auto-detects the models you've pulled** (Ollama) and lets you choose which one invents; each record stores its model, so the simulator A-Bs them.
+- ✅ **Approach constraint** — a **Non-invasive (biomolecules) / Invasive (electrodes)** selector that hard-constrains the design, so the engine returns molecular, non-invasive inventions by default (no stray electrode-on-brain proposals).
 - ✅ **Auto-save to a database** — every invention (design + multi-domain detail + parts + score) is captured in **MongoDB**, grouped by the 10 categories, with delete; JSONL fallback when Mongo is down.
 - ✅ **Literature grounding** — searches **PubMed · arXiv · USPTO · PubChem · GitHub · SearXNG · Wikipedia** and invents from the retrieved prior art; citations are stored with the record.
 - ✅ **Benchmark** — `bci bench` sweeps topics × N samples → pass-rate + mean-score leaderboard per category (A-B models), saved to the DB.

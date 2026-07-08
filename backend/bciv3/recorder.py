@@ -27,7 +27,7 @@ def build_record(topic: str, candidate: dict, prompt: str = "") -> dict:
         "layer": inv.layer, "domain": inv.domain, "laws": inv.laws,
         "lens": candidate.get("lens", "—"),
         "backend": candidate.get("backend", "—"), "provider": candidate.get("provider"),
-        "model": candidate.get("model"),
+        "model": candidate.get("model"), "constraint": candidate.get("constraint"),
         "note": candidate.get("note", ""),
         "grounded": bool(candidate.get("grounded")),
         "prompt": prompt,
@@ -48,10 +48,12 @@ def build_record(topic: str, candidate: dict, prompt: str = "") -> dict:
 
 
 def record(topic: str, prompt: str = "", *, lens: str = "biomimicry", backend: str = "auto",
-           ground: bool = True, save: bool = True, model: str | None = None) -> dict:
+           ground: bool = True, save: bool = True, model: str | None = None,
+           constraint: str | None = None) -> dict:
     """Search → invent (grounded) → simulate → detail → save. Returns the record with its id.
     Grounding is ON by default: the design is invented from retrieved literature / prior art."""
-    cand = _invent(topic, prompt, lens=lens, backend=backend, ground=ground, model=model)
+    cand = _invent(topic, prompt, lens=lens, backend=backend, ground=ground, model=model,
+                   constraint=constraint)
     rec = build_record(topic, cand, prompt)
     if save:
         rec["id"] = store.save(rec)

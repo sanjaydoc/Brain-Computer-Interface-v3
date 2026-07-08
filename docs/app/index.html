@@ -80,6 +80,11 @@
         <select id="lens"></select>
         <label class="fld" for="model" id="model-lbl" title="Which LLM invents the design. Auto-detected from your local server (Ollama) — every model you've pulled is listed. Switch to A-B them: the physics simulator decides which invents better. Needs the Python backend (bci serve); greyed out in browser-only mode.">LLM model <span class="muted small" id="model-hint"></span></label>
         <select id="model" title="Pick the model to invent with — auto-detected from your Ollama install."></select>
+        <label class="fld" for="constraint" title="Constrains HOW the invention interfaces with the brain, so you get the kind of design you want. Non-invasive forbids electrodes/implants/surgery and forces molecular/biomolecular + non-contact readout (ultrasound/optical/MRI). Invasive allows electrodes and implants.">approach constraint</label>
+        <select id="constraint" title="Non-invasive = biomolecules only (no electrodes/surgery). Invasive = electrodes/implants allowed.">
+          <option value="noninvasive">Non-invasive · biomolecules (no electrodes)</option>
+          <option value="invasive">Invasive · electrodes / implants allowed</option>
+        </select>
         <label class="fld" for="prompt">prompt</label>
         <input class="txt" id="prompt" placeholder="e.g. acoustic reporters, deep, safe, aggressive" />
         <label class="chk" title="Before inventing, search PubMed / arXiv / USPTO / PubChem / GitHub / SearXNG / Wikipedia and feed the results to the model, so the design is grounded in real prior art. Adds a few seconds; the citations are shown and saved. Uncheck for faster runs."><input type="checkbox" id="ground" checked /> ground in literature (PubMed · arXiv · USPTO · Wikipedia …)</label>

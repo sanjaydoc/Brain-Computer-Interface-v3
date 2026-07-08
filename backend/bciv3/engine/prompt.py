@@ -23,20 +23,39 @@ LENSES = {
 
 DEFAULT_LENS = "biomimicry"
 
+# Modality constraint — restricts HOW the invention is allowed to interface with the brain, so the
+# engine returns the kind of design you want (the GUI's "Non-invasive / Invasive" selector).
+CONSTRAINTS = {
+    "noninvasive": ("non-invasive brain-mapping",
+        "HARD CONSTRAINT — NON-INVASIVE ONLY. The design MUST NOT use electrodes, probes, implanted "
+        "arrays, craniotomy, or any surgery that penetrates the skull or brain. Use ONLY non-invasive "
+        "means: genetically-encoded or molecular / biomolecular reporters, systemically-delivered "
+        "agents (e.g. AAV), and non-contact readout (ultrasound, light / optical, MRI / MEG). If your "
+        "first idea needs microelectrodes or surgical placement, DISCARD it and invent a molecular / "
+        "field-based alternative. Materials and protocol steps must contain NO electrodes or implants."),
+    "invasive": ("brain-mapping",
+        "CONSTRAINT — INVASIVE HARDWARE ALLOWED. The design MAY use implanted electrodes, probes, "
+        "arrays, or surgically-placed devices; optimise that hardware approach (you need not restrict "
+        "to molecular methods)."),
+}
 
-def build_invent_prompt(inv: Innovation, user_prompt: str, lens: str, context: str = "") -> str:
+
+def build_invent_prompt(inv: Innovation, user_prompt: str, lens: str, context: str = "",
+                        constraint: str | None = None) -> str:
     directive = LENSES.get(lens, LENSES[DEFAULT_LENS])
     schema = ", ".join(f'"{k}": <number>' for k in inv.param_schema)
     laws = ", ".join(inv.laws)
     grounding = f"\n\n{context}\nGround your design in the prior knowledge above where relevant.\n" if context else ""
-    return f"""You are the {lens} Invention Agent for a non-invasive brain-mapping program.
+    header, block = CONSTRAINTS.get((constraint or "").lower(), ("non-invasive brain-mapping", ""))
+    constraint_block = f"\n\n{block}\n" if block else ""
+    return f"""You are the {lens} Invention Agent for a {header} program.
 Invent ONE concrete design that solves the target below, then express it as parameters a physics
 simulator can grade. Output ONLY raw JSON, no markdown.
 
 TARGET (innovation): {inv.title}
 DOMAIN: {inv.domain}   GOVERNING LAWS: {laws}
 SPEC (must meet): {inv.spec}
-USER PROMPT: {str(user_prompt or '').strip()[:300]}{grounding}
+USER PROMPT: {str(user_prompt or '').strip()[:300]}{grounding}{constraint_block}
 
 LENS — {directive}
 

@@ -25,6 +25,8 @@ async function probeApi() {
 
 // The chosen LLM model, or '' to use the backend/.env default. Auto-detected from the provider.
 const modelVal = () => ($('model') && $('model').value) || '';
+// The approach constraint: 'noninvasive' (biomolecules) | 'invasive' (electrodes).
+const constraintVal = () => ($('constraint') && $('constraint').value) || 'noninvasive';
 
 async function loadModels() {
   const sel = $('model'), lbl = $('model-lbl'), hint = $('model-hint');
@@ -151,7 +153,7 @@ async function runOne(tid, { save = false } = {}) {
       const r = await fetch(API + ep, {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ topic: tid, prompt: $('prompt').value, lens: $('lens').value,
-                               backend: 'auto', model: modelVal() || null,
+                               backend: 'auto', model: modelVal() || null, constraint: constraintVal(),
                                ground: $('ground') ? $('ground').checked : false }),
         signal: AbortSignal.timeout(180000),
       });
@@ -295,7 +297,7 @@ async function tournament() {
       const r = await fetch(API + '/api/rank', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ topic: tid, prompt: $('prompt').value, backend: 'auto',
-                               n_lenses: nLenses, model: modelVal() || null }),
+                               n_lenses: nLenses, model: modelVal() || null, constraint: constraintVal() }),
         signal: AbortSignal.timeout(180000),
       });
       const d = await r.json();

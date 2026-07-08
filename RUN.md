@@ -289,6 +289,27 @@ pulled). No code change to add a model — just `ollama pull <tag>` and reload t
 > in the static browser-only cockpit it's greyed to "backend only". From the terminal, the same
 > choice is `LOCAL_LLM_MODEL=… bci record …` (or `$env:LOCAL_LLM_MODEL="…"; bci record …`).
 
+### Constrain the approach — non-invasive vs invasive
+
+By default this is a **non-invasive** brain-mapping program, so the engine should invent with
+**biomolecules** (genetically-encoded / molecular reporters, systemic delivery, non-contact readout
+— ultrasound / optical / MRI), *not* electrodes on the brain. The **approach constraint** selector
+(cockpit) / `--constraint` flag (CLI) enforces that as a hard constraint in the LLM prompt:
+
+- **`noninvasive`** (default) — forbids electrodes, probes, implants, craniotomy, and surgery;
+  forces a molecular / field-based design. Materials and protocol may contain no implants.
+- **`invasive`** — allows implanted electrodes / probes / arrays, if you *want* a hardware design.
+
+```bash
+bci record scan_throughput "whole brain in under 3 days" --constraint noninvasive   # biomolecules only
+bci record scan_throughput "whole brain in under 3 days" --constraint invasive       # electrodes allowed
+bci invent snr_depth "deep, safe" --constraint noninvasive
+```
+
+In the cockpit it's the **approach constraint** dropdown (defaults to *Non-invasive · biomolecules*).
+The chosen constraint is stored with each saved record. This is what stops the engine proposing
+"high-density microelectrode arrays across the brain surface" for a whole-brain scan.
+
 ### Thinking models (Qwen3.5, DeepSeek-R1)
 
 Qwen3.5 **reasons before answering** (the `Thinking…` block). The engine handles this: it strips

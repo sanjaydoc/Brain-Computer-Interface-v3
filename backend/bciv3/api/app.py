@@ -37,6 +37,7 @@ class InventReq(BaseModel):
     lens: str = "biomimicry"
     backend: str = "auto"          # auto | llm | fallback
     model: str | None = None       # override the LLM model for this call (GUI model picker)
+    constraint: str | None = None  # noninvasive | invasive — restrict how the design interfaces
 
 
 class DesignReq(InventReq):
@@ -55,6 +56,7 @@ class RankReq(BaseModel):
     backend: str = "auto"
     n_lenses: int = 10             # run the first N of the 10 lenses (3 / 5 / 10)
     model: str | None = None       # override the LLM model for this call (GUI model picker)
+    constraint: str | None = None  # noninvasive | invasive — restrict how the design interfaces
 
 
 @app.get("/api/health")
@@ -75,7 +77,8 @@ def topics() -> dict:
 def do_invent(req: InventReq) -> dict:
     if req.topic not in CATALOG:
         return {"error": f"unknown topic {req.topic!r}", "topics": all_ids()}
-    cand = invent(req.topic, req.prompt, lens=req.lens, backend=req.backend, model=req.model)
+    cand = invent(req.topic, req.prompt, lens=req.lens, backend=req.backend, model=req.model,
+                  constraint=req.constraint)
     return {"candidate": cand, "result": report(req.topic, cand)}
 
 
@@ -83,7 +86,8 @@ def do_invent(req: InventReq) -> dict:
 def do_design(req: DesignReq) -> dict:
     if req.topic not in CATALOG:
         return {"error": f"unknown topic {req.topic!r}", "topics": all_ids()}
-    return design(req.topic, req.prompt, rounds=req.rounds, lens=req.lens, backend=req.backend, model=req.model)
+    return design(req.topic, req.prompt, rounds=req.rounds, lens=req.lens, backend=req.backend,
+                  model=req.model, constraint=req.constraint)
 
 
 @app.post("/api/rank")
@@ -91,8 +95,8 @@ def do_rank(req: RankReq) -> dict:
     if req.topic not in CATALOG:
         return {"error": f"unknown topic {req.topic!r}", "topics": all_ids()}
     n = max(1, min(int(req.n_lenses), len(LENSES)))
-    return {"ranked": rank(req.topic, req.prompt, lenses=list(LENSES)[:n], backend=req.backend, model=req.model),
-            "n_lenses": n}
+    return {"ranked": rank(req.topic, req.prompt, lenses=list(LENSES)[:n], backend=req.backend,
+                           model=req.model, constraint=req.constraint), "n_lenses": n}
 
 
 @app.post("/api/record")
@@ -101,7 +105,8 @@ def do_record(req: DesignReq) -> dict:
     if req.topic not in CATALOG:
         return {"error": f"unknown topic {req.topic!r}", "topics": all_ids()}
     return {"record": record(req.topic, req.prompt, lens=req.lens, backend=req.backend,
-                             ground=req.ground, save=True, model=req.model), "store": store.backend()}
+                             ground=req.ground, save=True, model=req.model,
+                             constraint=req.constraint), "store": store.backend()}
 
 
 @app.get("/api/models")

@@ -69,7 +69,8 @@ def _rule_based(inv: Innovation, prompt: str) -> dict:
 
 
 def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend: str = "auto",
-           ground: bool = False, sources=None, model: str | None = None) -> dict:
+           ground: bool = False, sources=None, model: str | None = None,
+           constraint: str | None = None) -> dict:
     inv = get(topic_id)
     lens = lens if lens in LENSES else DEFAULT_LENS
     chosen = backend if backend != "auto" else ("llm" if llm.available() else "fallback")
@@ -84,6 +85,7 @@ def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend
     def _grounded(out: dict) -> dict:
         out["citations"] = citations
         out["grounded"] = bool(ground and citations)
+        out["constraint"] = constraint
         return out
 
     if chosen == "llm":
@@ -94,7 +96,7 @@ def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend
         for _ in range(3):
             t0 = time.monotonic()
             try:
-                parsed = llm.extract_json(llm.invoke_json(build_invent_prompt(inv, prompt, lens, context),
+                parsed = llm.extract_json(llm.invoke_json(build_invent_prompt(inv, prompt, lens, context, constraint),
                                                            max_tokens=max_tok, model=model))
             except Exception as exc:
                 dt = round(time.monotonic() - t0, 1)

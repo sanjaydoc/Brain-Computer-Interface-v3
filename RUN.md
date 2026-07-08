@@ -146,6 +146,7 @@ bci topics                                            # list the 10 topics
 bci invent multiplexed_reporters "acoustic, deep"     # invent + grade from the terminal
 bci record in_vivo_readout "non-destructive"          # search → invent → simulate → save to DB
 bci record snr_depth "deep, safe" --no-ground         # skip the literature search (faster)
+bci invent snr_depth "deep, safe" --model qwen2.5:3b  # pick the model for this run (A-B models)
 bci search "gas vesicle acoustic reporter genes"      # preview retrieved literature (per-source)
 bci bench --samples 5                                 # leaderboard across all 10 topics
 bci db --stats                                        # counts + pass-rate per category
@@ -307,30 +308,40 @@ export BCI_LLM_MODEL="qwen/qwen2.5-7b-instruct"
 
 ## 4b. Compare / A-B two models (which is better at invention?)
 
-The model is just `LOCAL_LLM_MODEL` — swap it per run and let the **law simulator decide** which
-produces more physically-admissible, higher-scoring designs. No code change.
+The cleanest way is the **`--model` flag** — every `bci invent` / `bci record` / `bci bench` takes
+it, so you switch models per command with no env fiddling. The **law simulator decides** which model
+produces more physically-admissible, higher-scoring designs.
 
-**Linux / macOS**
+**Same command, two models (works on every OS):**
 ```bash
-# a faster, lighter baseline:
-LOCAL_LLM_MODEL=qwen2.5:7b bci invent multiplexed_reporters "acoustic, deep, safe"
-# a newer, larger model:
-LOCAL_LLM_MODEL=qwen3.5:9b bci invent multiplexed_reporters "acoustic, deep, safe"
+bci invent snr_depth "focused ultrasound, deep, safe" --model qwen2.5:7b
+bci invent snr_depth "focused ultrasound, deep, safe" --model qwen2.5:3b
 ```
 
-**Windows (PowerShell)** — set, run, repeat:
-```powershell
-$env:LOCAL_LLM_MODEL = "qwen2.5:7b"; bci invent multiplexed_reporters "acoustic, deep, safe"
-$env:LOCAL_LLM_MODEL = "qwen3.5:9b"; bci invent multiplexed_reporters "acoustic, deep, safe"
+**Save both to the DB and compare** — each record stores which model produced it:
+```bash
+bci record snr_depth "deep, safe" --model qwen2.5:7b --no-ground
+bci record snr_depth "deep, safe" --model qwen2.5:3b --no-ground
+bci db snr_depth                                    # list them, best-score first
 ```
 
-Compare the `passed`, `score`, and `limiting` fields across the 10 topics. Whichever yields more
-passes / higher scores is empirically better **for this task** — the answer that matters, and it's
-model-agnostic.
+**Head-to-head leaderboard across all 10 topics** (the rigorous answer):
+```bash
+bci bench --samples 5 --model qwen2.5:7b            # run 1
+bci bench --samples 5 --model qwen2.5:3b            # run 2 — compare MEAN pass-rate / score
+```
 
-> Confirm the exact model tag first with `ollama show <tag>` / `ollama list`, and read its model
-> card. A larger, newer, reasoning-capable model usually invents better; a smaller one iterates
-> faster. `bci serve` shows the active provider in the cockpit's controls card.
+Compare the `passed`, `score`, and `limiting` fields (or the bench leaderboards). Whichever yields
+more passes / higher scores is empirically better **for this task** — model-agnostic and decided by
+physics, not by the prose.
+
+> `--model` overrides `LOCAL_LLM_MODEL` just for that command; omit it to use your `.env` default.
+> Confirm exact tags with `ollama list`. In the **cockpit GUI**, the same choice is the auto-detected
+> **LLM model** dropdown (§4a) — pick a model and hit *Invent + Simulate*.
+>
+> *(Older env-var form, still works: `LOCAL_LLM_MODEL=qwen2.5:3b bci invent …` on Linux/macOS, or
+> `$env:LOCAL_LLM_MODEL="qwen2.5:3b"; bci invent …` on Windows — but that variable **persists for the
+> whole session**, so `--model` is safer.)*
 
 ---
 
@@ -406,13 +417,11 @@ bci bench --ground                    # ground each attempt in literature (slowe
 bci bench --save-attempts             # also persist every invention to the DB
 ```
 
-**A-B two models** — run it once per model and compare the leaderboards:
+**A-B two models** — pass `--model` to each run and compare the leaderboards:
 
 ```bash
-# .env: LOCAL_LLM_MODEL=qwen2.5:7b
-bci bench --samples 5
-# .env: LOCAL_LLM_MODEL=qwen3.5:9b   (or a per-session override)
-bci bench --samples 5
+bci bench --samples 5 --model qwen2.5:7b
+bci bench --samples 5 --model qwen2.5:3b
 ```
 
 Each run records the model, mean pass-rate, and mean score, so whichever produces more

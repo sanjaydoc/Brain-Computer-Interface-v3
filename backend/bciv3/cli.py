@@ -26,7 +26,8 @@ def _serve(args) -> int:
 
 def _invent(args) -> int:
     import bciv3
-    cand = bciv3.invent(args.topic, args.prompt or "", lens=args.lens, backend=args.backend)
+    cand = bciv3.invent(args.topic, args.prompt or "", lens=args.lens, backend=args.backend,
+                        model=args.model)
     print(json.dumps(bciv3.report(args.topic, cand), indent=2))
     return 0
 
@@ -41,7 +42,7 @@ def _topics(_args) -> int:
 def _record(args) -> int:
     import bciv3
     rec = bciv3.record(args.topic, args.prompt or "", lens=args.lens, backend=args.backend,
-                       ground=args.ground, save=True)
+                       ground=args.ground, save=True, model=args.model)
     via = rec.get("backend")
     tag = f"LLM ({rec.get('provider')})" if via == "llm" else f"{via} (no LLM used)" if via == "fallback" else via
     ground = f"grounded: {', '.join(rec.get('sources_used') or []) or 'none'}"
@@ -115,7 +116,7 @@ def _bench(args) -> int:
     res = bciv3.bench.run(samples=args.samples, prompt=args.prompt or "",
                           topics=[args.topic] if args.topic else None,
                           backend=args.backend, ground=args.ground,
-                          save_attempts=args.save_attempts)
+                          save_attempts=args.save_attempts, model=args.model)
     m = res["model"] or res["provider"] or "rule-based"
     print(f"model: {m}  |  samples/topic: {res['samples_per_topic']}  |  grounded: {res['grounded']}")
     print(f"MEAN pass-rate: {res['mean_pass_rate']}   MEAN score: {res['mean_score']}\n")
@@ -154,6 +155,7 @@ def main(argv=None) -> int:
     iv.add_argument("prompt", nargs="?", default="")
     iv.add_argument("--lens", default="biomimicry")
     iv.add_argument("--backend", default="auto", choices=["auto", "llm", "fallback"])
+    iv.add_argument("--model", default=None, help="override the LLM model (e.g. qwen2.5:3b) for this run")
     iv.set_defaults(fn=_invent)
 
     t = sub.add_parser("topics", help="list the 10 innovation topics")
@@ -168,6 +170,7 @@ def main(argv=None) -> int:
     rc.add_argument("--lens", default="biomimicry")
     rc.add_argument("--backend", default="auto", choices=["auto", "llm", "fallback"])
     rc.add_argument("--no-ground", dest="ground", action="store_false", help="skip the literature search (faster)")
+    rc.add_argument("--model", default=None, help="override the LLM model (e.g. qwen2.5:3b) for this run")
     rc.set_defaults(ground=True)
     rc.set_defaults(fn=_record)
 
@@ -187,6 +190,7 @@ def main(argv=None) -> int:
     bn.add_argument("--backend", default="auto", choices=["auto", "llm", "fallback"])
     bn.add_argument("--ground", action="store_true", help="ground each attempt in literature (slower)")
     bn.add_argument("--save-attempts", action="store_true", help="also save every invention to the DB")
+    bn.add_argument("--model", default=None, help="override the LLM model (e.g. qwen2.5:3b) for the whole sweep")
     bn.set_defaults(fn=_bench)
 
     db = sub.add_parser("db", help="list saved inventions (or --stats)")

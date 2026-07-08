@@ -18,15 +18,17 @@ from .recorder import record
 
 def run(*, topics=None, samples: int = 3, prompt: str = "", backend: str = "auto",
         ground: bool = False, lens: str = "biomimicry", save_attempts: bool = False,
-        save_summary: bool = True) -> dict:
+        save_summary: bool = True, model: str | None = None) -> dict:
     """Run the sweep. `save_attempts` persists every invention to the DB (off by default to avoid
-    flooding it); `save_summary` stores the compact leaderboard in the `benchmarks` collection."""
+    flooding it); `save_summary` stores the compact leaderboard in the `benchmarks` collection.
+    `model` overrides the LLM model for this whole sweep (A-B two models head-to-head)."""
     topics = topics or all_ids()
     per_topic: dict[str, dict] = {}
     for tid in topics:
         scores, passes = [], 0
         for _ in range(max(1, samples)):
-            rec = record(tid, prompt, lens=lens, backend=backend, ground=ground, save=save_attempts)
+            rec = record(tid, prompt, lens=lens, backend=backend, ground=ground,
+                         save=save_attempts, model=model)
             sc = rec["score"]
             scores.append(sc["score"]); passes += 1 if sc["passed"] else 0
         n = len(scores)
@@ -38,7 +40,7 @@ def run(*, topics=None, samples: int = 3, prompt: str = "", backend: str = "auto
     k = len(per_topic) or 1
     summary = {
         "ts": datetime.now(timezone.utc).isoformat(),
-        "model": os.environ.get("LOCAL_LLM_MODEL") or os.environ.get("BCI_LLM_MODEL"),
+        "model": model or os.environ.get("LOCAL_LLM_MODEL") or os.environ.get("BCI_LLM_MODEL"),
         "provider": llm.provider(),
         "backend": backend, "grounded": ground, "samples_per_topic": samples, "prompt": prompt,
         "mean_pass_rate": round(sum(t["pass_rate"] for t in per_topic.values()) / k, 3),

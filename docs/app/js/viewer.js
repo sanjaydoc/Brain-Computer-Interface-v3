@@ -247,7 +247,28 @@ async function inventSelected() {
   $('invent').disabled = false;
   $('invent').textContent = '✨ Invent + Simulate';
 }
-$('topic').addEventListener('change', inventSelected);
+// Reset the panels to a neutral "ready" state for a topic — WITHOUT inventing. Inventing only ever
+// happens when the user clicks ✨ Invent + Simulate, so nothing fires on topic-change or page-load.
+function showReady(tid) {
+  selected = tid;
+  const t = TOPICS[tid];
+  $('v-title').textContent = t.title;
+  const pass = $('v-pass'); pass.textContent = '—'; pass.className = 'pill';
+  $('v-fid').textContent = t.fidelity;
+  $('v-score').textContent = '—';
+  $('v-limit').textContent = '—';
+  $('v-tags').innerHTML = t.layer.map((l) => `<span class="tag ${l}">${l}</span>`).join('');
+  $('v-metrics').innerHTML = 'press ✨ Invent + Simulate →';
+  // clear any previous candidate so stale details don't sit under a new topic
+  ['c-domain', 'c-via', 'c-mech', 'c-params', 'c-detail', 'c-parts', 'c-cites', 'c-saved'].forEach((id) => { if ($(id)) $(id).innerHTML = ''; });
+  $('c-title').textContent = '—';
+}
+function onTopicChange() {
+  showReady($('topic').value);
+  setStatus('topic selected — add a prompt (optional) and hit ✨ Invent + Simulate');
+  setTimeout(() => setStatus(''), 4000);
+}
+$('topic').addEventListener('change', onTopicChange);
 $('invent').addEventListener('click', inventSelected);
 $('all').addEventListener('click', async () => {
   $('all').textContent = '… grading all';
@@ -450,6 +471,6 @@ if ($('model')) $('model').addEventListener('change', syncEngineLabel);
 (async () => {
   await probeApi();
   await loadModels();
-  const { cand, s } = await runOne(selected); showVerdict(selected, cand, s); draw();
+  showReady(selected); draw();          // neutral ready state — do NOT invent until the user clicks
 })();
 resize();

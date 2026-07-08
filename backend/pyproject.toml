@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "bciv3"
+version = "0.1.0"
+description = "Brain-Computer-Interface v3 — invention engine + law-based simulator for the 10 mapping innovations"
+requires-python = ">=3.10"
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+plot = ["matplotlib>=3.7"]
+
+[tool.setuptools]
+packages = ["bciv3", "bciv3.laws", "bciv3.innovations", "bciv3.engine"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

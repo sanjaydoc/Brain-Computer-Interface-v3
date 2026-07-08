@@ -43,8 +43,9 @@ LENS — {directive}
 The design's numeric parameters MUST use exactly these keys (pick values that clear the spec):
 {{{schema}}}
 
-JSON:
-{{"title":"short catchy name","mechanism":"2-3 sentences on how it physically works","domain":"{inv.domain}","params":{{{schema}}},"assumptions":["a1","a2"],"risks":["r1"],"noveltyScore":0.8}}"""
+Be THOROUGH and specific — capture the full invention: a detailed mechanism, concrete materials,
+step-by-step protocol, and honest assumptions/risks. Output ONLY this JSON:
+{{"title":"short catchy name","mechanism":"detailed multi-sentence explanation of how it physically works, grounded in the prior knowledge where relevant","domain":"{inv.domain}","params":{{{schema}}},"materials":["specific material / reagent / component 1","..."],"protocol_steps":["step 1","step 2","..."],"assumptions":["a1","a2","..."],"risks":["r1","..."],"references":["title of a cited source you used","..."],"noveltyScore":0.8,"feasibilityScore":0.7,"impactScore":0.85}}"""
 
 
 def build_refine_prompt(inv: Innovation, prev: dict, score) -> str:

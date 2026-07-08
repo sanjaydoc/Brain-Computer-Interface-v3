@@ -93,13 +93,20 @@ def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend
             except Exception as exc:
                 return _grounded({**_rule_based(inv, prompt), "note": f"llm failed ({exc}); used fallback"})
             if parsed and parsed.get("params"):
-                return _grounded({"title": str(parsed.get("title") or inv.title)[:80],
-                        "mechanism": str(parsed.get("mechanism") or "")[:400],
+                _list = lambda k: [str(x) for x in (parsed.get(k) or [])][:40]
+                _num = lambda k, d: float(parsed.get(k) or d)
+                return _grounded({"title": str(parsed.get("title") or inv.title)[:200],
+                        "mechanism": str(parsed.get("mechanism") or ""),        # full, not trimmed
                         "domain": parsed.get("domain", inv.domain),
                         "params": _sanitize_params(inv, parsed.get("params")),
-                        "assumptions": list(parsed.get("assumptions") or [])[:5],
-                        "risks": list(parsed.get("risks") or [])[:5],
-                        "noveltyScore": float(parsed.get("noveltyScore") or 0.7),
+                        "materials": _list("materials"),
+                        "protocol_steps": _list("protocol_steps"),
+                        "assumptions": _list("assumptions"),
+                        "risks": _list("risks"),
+                        "references": _list("references"),
+                        "noveltyScore": _num("noveltyScore", 0.7),
+                        "feasibilityScore": _num("feasibilityScore", 0.6),
+                        "impactScore": _num("impactScore", 0.7),
                         "lens": lens, "backend": "llm", "provider": llm.provider()})
         return _grounded({**_rule_based(inv, prompt), "note": "llm returned no usable design; used fallback"})
     return _grounded(_rule_based(inv, prompt))

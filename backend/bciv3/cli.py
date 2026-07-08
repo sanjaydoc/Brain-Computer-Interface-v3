@@ -41,8 +41,27 @@ def _topics(_args) -> int:
 def _record(args) -> int:
     import bciv3
     rec = bciv3.record(args.topic, args.prompt or "", lens=args.lens, backend=args.backend, save=True)
-    print(f"saved id={rec['id']}  →  {bciv3.store.backend()}")
-    print(json.dumps({k: rec[k] for k in ("topic", "title", "score", "detail", "parts")}, indent=2))
+    via = rec.get("backend")
+    tag = f"LLM ({rec.get('provider')})" if via == "llm" else f"{via} (no LLM used)" if via == "fallback" else via
+    ground = f"grounded: {', '.join(rec.get('sources_used') or []) or 'none'}"
+    print(f"saved id={rec['id']}  →  {bciv3.store.backend()}   |   engine: {tag}   |   {ground}")
+    print(json.dumps(rec, indent=2, ensure_ascii=False, default=str))    # full record, nothing trimmed
+    return 0
+
+
+def _health(_args) -> int:
+    import bciv3
+    b = bciv3.backends()
+    print("LLM provider :", b["provider"] or "NONE — falling back to the rule-based proposer")
+    print("LLM available:", b["llm"])
+    print("database     :", bciv3.store.backend())
+    from bciv3.search.retrieve import _enabled
+    print("search       :", ", ".join(_enabled(None)) or "none")
+    import os
+    print("LOCAL_LLM_URL:", os.environ.get("LOCAL_LLM_URL") or "(unset) — required to use a local model")
+    print("LOCAL_LLM_MODEL:", os.environ.get("LOCAL_LLM_MODEL") or "(unset)")
+    if not b["llm"]:
+        print("\n→ To use Qwen: set LOCAL_LLM_URL=http://localhost:11434/v1 (+ LOCAL_LLM_MODEL) and run `ollama serve`.")
     return 0
 
 
@@ -87,6 +106,9 @@ def main(argv=None) -> int:
 
     t = sub.add_parser("topics", help="list the 10 innovation topics")
     t.set_defaults(fn=_topics)
+
+    hp = sub.add_parser("health", help="show the active LLM provider, database, and search sources")
+    hp.set_defaults(fn=_health)
 
     rc = sub.add_parser("record", help="invent + detail + score, then save to the database")
     rc.add_argument("topic")

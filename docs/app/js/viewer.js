@@ -9,7 +9,8 @@ let selected = TOPIC_IDS[0];
 
 // Optional Python backend (FastAPI). If it's up, 'Invent + Simulate' routes there so the real
 // LLM lenses + critique loop run (and your local Qwen, if wired). Otherwise the browser proposer.
-const API = localStorage.getItem('bciv3_api') || 'http://localhost:8000';
+// Default: same origin — so `bci serve` (API + cockpit on one port) works with zero config.
+const API = localStorage.getItem('bciv3_api') || location.origin;
 let apiUp = false, apiProvider = null;
 
 async function probeApi() {

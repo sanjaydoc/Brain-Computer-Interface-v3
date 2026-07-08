@@ -8,8 +8,12 @@ CORS is wide-open (localhost dev tool); tighten `allow_origins` if you expose it
 
 from __future__ import annotations
 
+from pathlib import Path
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import RedirectResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 import bciv3
@@ -21,6 +25,9 @@ app = FastAPI(title="BCI v3 — invention engine", version="0.1.0")
 app.add_middleware(
     CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"],
 )
+
+# Serve the cockpit from the same origin, so one command + one port runs API + GUI (`bci serve`).
+DOCS = Path(__file__).resolve().parents[3] / "docs"
 
 
 class InventReq(BaseModel):
@@ -74,3 +81,14 @@ def do_rank(req: RankReq) -> dict:
     if req.topic not in CATALOG:
         return {"error": f"unknown topic {req.topic!r}", "topics": all_ids()}
     return {"ranked": rank(req.topic, req.prompt, backend=req.backend)}
+
+
+# --- static cockpit (mounted last so /api/* always wins) ---------------------
+if DOCS.is_dir():
+    @app.get("/")
+    def _root() -> RedirectResponse:
+        return RedirectResponse(url="/app/")
+
+    if (DOCS / "assets").is_dir():
+        app.mount("/assets", StaticFiles(directory=DOCS / "assets"), name="assets")
+    app.mount("/app", StaticFiles(directory=DOCS / "app", html=True), name="cockpit")

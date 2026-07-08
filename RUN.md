@@ -52,28 +52,33 @@ simulator, prints a scorecard, and writes `docs/media/scorecard.png`.
 
 ---
 
-## 3. Live LLM in the cockpit — the FastAPI backend
+## 3. Run everything — one command
 
-The browser cockpit runs the deterministic proposer on its own. Start the backend and it routes
-**Invent + Simulate** through the Python engine — so the real LLM lenses + critique loop (and your
-local Qwen) run, and the design flows back into the cockpit.
+`bci serve` runs the API **and** the cockpit on a single port. From the project root (venv active):
 
 ```bash
-cd backend
-pip install -e ".[api]"
-uvicorn bciv3.api.app:app --port 8000        # add --reload while developing
+bci serve                     # → http://localhost:8000/app/
 ```
 
-Then serve the cockpit (separate terminal) and open it — it auto-detects the backend on
-`http://localhost:8000` and shows the active provider (e.g. `qwen3.5:9b (backend)`):
+Open **http://localhost:8000/app/**. The cockpit is served from the same origin as the API, so
+**Invent + Simulate** routes through the Python engine (real LLM lenses + critique loop, and your
+local Qwen if wired) with zero extra config. The controls card shows the active provider
+(e.g. `qwen3.5:9b (backend)`).
 
 ```bash
-cd docs && python -m http.server 8097        # → http://localhost:8097/app/
+bci serve --port 9000         # pick a port
+bci serve --reload            # auto-reload while developing
 ```
 
-> Point the cockpit at a different backend URL from the browser console:
-> `localStorage.setItem('bciv3_api','http://host:8000')`. If the backend is down, the cockpit
-> silently falls back to the in-browser proposer.
+Other one-shot commands:
+
+```bash
+bci topics                                            # list the 10 topics
+bci invent multiplexed_reporters "acoustic, deep"     # invent + grade from the terminal
+```
+
+> If the backend isn't running, the cockpit silently falls back to the in-browser proposer, so
+> the static page still works on its own (`cd docs && python -m http.server 8097`).
 
 ---
 

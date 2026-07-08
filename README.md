@@ -124,9 +124,11 @@ reduction · scaling · future`
 ```bash
 cd backend
 python3 -m venv .venv && source .venv/bin/activate      # Windows: .\.venv\Scripts\Activate.ps1
-pip install -e ".[dev,plot]"
-python -m pytest -q                    # 13 passed
+pip install -e ".[dev,plot,api]"
+python -m pytest -q                    # 15 passed
 python scripts/demo_invent.py --plot   # scorecard + docs/media/scorecard.png
+
+bci serve                              # API + cockpit on one port → http://localhost:8000/app/
 ```
 
 ```python

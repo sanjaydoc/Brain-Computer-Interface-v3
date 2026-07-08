@@ -40,7 +40,8 @@ def _topics(_args) -> int:
 
 def _record(args) -> int:
     import bciv3
-    rec = bciv3.record(args.topic, args.prompt or "", lens=args.lens, backend=args.backend, save=True)
+    rec = bciv3.record(args.topic, args.prompt or "", lens=args.lens, backend=args.backend,
+                       ground=args.ground, save=True)
     via = rec.get("backend")
     tag = f"LLM ({rec.get('provider')})" if via == "llm" else f"{via} (no LLM used)" if via == "fallback" else via
     ground = f"grounded: {', '.join(rec.get('sources_used') or []) or 'none'}"
@@ -134,6 +135,8 @@ def main(argv=None) -> int:
     rc.add_argument("prompt", nargs="?", default="")
     rc.add_argument("--lens", default="biomimicry")
     rc.add_argument("--backend", default="auto", choices=["auto", "llm", "fallback"])
+    rc.add_argument("--no-ground", dest="ground", action="store_false", help="skip the literature search (faster)")
+    rc.set_defaults(ground=True)
     rc.set_defaults(fn=_record)
 
     sr = sub.add_parser("search", help="preview retrieved literature / prior art for a query")

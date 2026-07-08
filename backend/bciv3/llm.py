@@ -84,7 +84,7 @@ def _chat(base: str, key: str | None, model: str, prompt: str, max_tokens: int, 
     return data["choices"][0]["message"]["content"]
 
 
-def invoke_json(prompt: str, max_tokens: int = 2000, timeout: float = 120.0) -> str:
+def invoke_json(prompt: str, max_tokens: int = 2000, timeout: float = 300.0) -> str:
     """Return raw model text (expected JSON). Raises if no provider / on failure.
 
     For thinking models (Qwen3, etc.) the default token budget is generous so the JSON that

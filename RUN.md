@@ -154,6 +154,35 @@ export BCI_LLM_MODEL="qwen/qwen2.5-7b-instruct"
 
 ---
 
+## 4b. Compare / A-B two models (which is better at invention?)
+
+The model is just `LOCAL_LLM_MODEL` — swap it per run and let the **law simulator decide** which
+produces more physically-admissible, higher-scoring designs. No code change.
+
+**Linux / macOS**
+```bash
+# a faster, lighter baseline:
+LOCAL_LLM_MODEL=qwen2.5:7b-instruct bci invent multiplexed_reporters "acoustic, deep, safe"
+# a newer, larger model:
+LOCAL_LLM_MODEL=qwen3.5:9b          bci invent multiplexed_reporters "acoustic, deep, safe"
+```
+
+**Windows (PowerShell)** — set, run, repeat:
+```powershell
+$env:LOCAL_LLM_MODEL = "qwen2.5:7b-instruct"; bci invent multiplexed_reporters "acoustic, deep, safe"
+$env:LOCAL_LLM_MODEL = "qwen3.5:9b";          bci invent multiplexed_reporters "acoustic, deep, safe"
+```
+
+Compare the `passed`, `score`, and `limiting` fields across the 10 topics. Whichever yields more
+passes / higher scores is empirically better **for this task** — the answer that matters, and it's
+model-agnostic.
+
+> Confirm the exact model tag first with `ollama show <tag>` / `ollama list`, and read its model
+> card. A larger, newer, reasoning-capable model usually invents better; a smaller one iterates
+> faster. `bci serve` shows the active provider in the cockpit's controls card.
+
+---
+
 ## 5. Use it from Python
 
 ```python

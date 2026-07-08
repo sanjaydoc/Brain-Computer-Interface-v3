@@ -171,6 +171,12 @@ def invoke_json(prompt: str, max_tokens: int = 2000, timeout: float = 300.0,
     raise RuntimeError("no LLM provider configured (set LOCAL_LLM_URL / NVIDIA_API_KEY / …)")
 
 
+def invoke_text(prompt: str, max_tokens: int = 400, timeout: float = 300.0, model: str | None = None) -> str:
+    """Free-text completion (no JSON grammar) — used to summarize a fetched full-text publication
+    into a dense, detail-preserving brief that fits the model's context window."""
+    return invoke_json(prompt, max_tokens=max_tokens, timeout=timeout, json_mode=False, model=model)
+
+
 def _ping_once(json_mode: bool, max_tokens: int, timeout: float) -> dict:
     import time
     t0 = time.monotonic()

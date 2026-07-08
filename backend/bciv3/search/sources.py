@@ -16,6 +16,11 @@ import xml.etree.ElementTree as ET
 
 UA = {"User-Agent": "bciv3-invention-engine/0.1 (research)"}
 
+# How many characters of each source's content (abstract / extract / patent text) to keep and feed
+# the model. The old 300 cap starved it — real abstracts are ~1500 chars. Raise/lower per hardware:
+# a bigger context grounds better but is slower on small local models. Override with BCIV3_SNIPPET_CHARS.
+SNIPPET_CHARS = int(os.environ.get("BCIV3_SNIPPET_CHARS", "1600"))
+
 
 def _get(url: str, timeout: float = 8.0, headers: dict | None = None) -> str:
     req = urllib.request.Request(url, headers={**UA, **(headers or {})})
@@ -25,7 +30,7 @@ def _get(url: str, timeout: float = 8.0, headers: dict | None = None) -> str:
 
 def _cite(source, title, url, snippet=""):
     return {"source": source, "title": str(title).strip()[:240],
-            "url": url, "snippet": str(snippet).strip()[:300]}
+            "url": url, "snippet": " ".join(str(snippet).split())[:SNIPPET_CHARS]}
 
 
 # ---------- pure parsers (offline-testable) ----------
@@ -37,6 +42,20 @@ def parse_pubmed(esummary_json: dict, n: int) -> list[dict]:
         out.append(_cite("pubmed", d.get("title", uid),
                          f"https://pubmed.ncbi.nlm.nih.gov/{uid}/",
                          f"{d.get('source','')} {d.get('pubdate','')}"))
+    return out
+
+
+def parse_pubmed_efetch(xml_text: str, n: int) -> list[dict]:
+    """Parse an efetch PubMed XML reply → title + FULL abstract (multi-section abstracts joined)."""
+    root = ET.fromstring(xml_text)
+    out = []
+    for art in root.findall(".//PubmedArticle")[:n]:
+        pmid = (art.findtext(".//PMID") or "").strip()
+        te = art.find(".//ArticleTitle")
+        title = ("".join(te.itertext()).strip() if te is not None else "") or pmid
+        parts = ["".join(e.itertext()).strip() for e in art.findall(".//Abstract/AbstractText")]
+        abstract = " ".join(p for p in parts if p).strip()
+        out.append(_cite("pubmed", title, f"https://pubmed.ncbi.nlm.nih.gov/{pmid}/", abstract))
     return out
 
 
@@ -72,9 +91,10 @@ def search_pubmed(q: str, n: int = 3) -> list[dict]:
             .get("esearchresult", {}).get("idlist", [])
         if not ids:
             return []
-        sp = urllib.parse.urlencode({"db": "pubmed", "id": ",".join(ids), "retmode": "json",
+        # efetch returns the real ABSTRACT (esummary only gave journal+date) — that's what grounds the model.
+        fp = urllib.parse.urlencode({"db": "pubmed", "id": ",".join(ids), "retmode": "xml",
                                      **({"api_key": key} if key else {})})
-        return parse_pubmed(json.loads(_get(f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi?{sp}")), n)
+        return parse_pubmed_efetch(_get(f"https://eutils.ncbi.nlm.nih.gov/entrez/eutils/efetch.fcgi?{fp}"), n)
     except Exception:
         return []
 
@@ -89,7 +109,24 @@ def search_arxiv(q: str, n: int = 3) -> list[dict]:
 
 
 def search_wikipedia(q: str, n: int = 3) -> list[dict]:
+    # Pull the intro EXTRACT (real article prose), not the ~150-char search snippet.
     try:
+        p = urllib.parse.urlencode({"action": "query", "format": "json", "generator": "search",
+                                    "gsrsearch": q, "gsrlimit": n, "prop": "extracts",
+                                    "exintro": 1, "explaintext": 1, "exlimit": "max"})
+        pages = (json.loads(_get(f"https://en.wikipedia.org/w/api.php?{p}"))
+                 .get("query", {}).get("pages", {}) or {}).values()
+        out = []
+        for pg in sorted(pages, key=lambda g: g.get("index", 999))[:n]:
+            t = pg.get("title", "")
+            out.append(_cite("wikipedia", t,
+                             "https://en.wikipedia.org/wiki/" + urllib.parse.quote(t.replace(" ", "_")),
+                             pg.get("extract", "")))
+        if out:
+            return out
+    except Exception:
+        pass
+    try:                                            # fallback: the lighter search-snippet endpoint
         p = urllib.parse.urlencode({"action": "query", "list": "search", "srsearch": q,
                                     "srlimit": n, "format": "json"})
         return parse_wikipedia(json.loads(_get(f"https://en.wikipedia.org/w/api.php?{p}")), n)

@@ -435,6 +435,32 @@ citations show in the candidate aside and are saved to the record's `citations` 
 > Sources that fail, time out, or aren't configured contribute nothing — grounding never breaks a
 > run. Offline, inventions still work (ungrounded).
 
+### How much of each source the model actually reads
+
+The engine feeds the model **real content**, not just titles: PubMed **abstracts** (via efetch),
+Wikipedia intro **extracts**, arXiv/USPTO **abstracts**. But an LLM has a finite context window, so
+there are two caps:
+
+```ini
+# BCIV3_SNIPPET_CHARS=1600     # per-source content kept (abstracts are ~1500 chars) — raise for more
+# BCIV3_CONTEXT_CHARS=6000     # TOTAL grounding text sent to the model (fits a modest context window)
+```
+
+**Full-text mode** — fetch the *whole publication* and have the LLM distill it into a dense,
+detail-preserving brief before grounding (the only way to use a full paper without overflowing the
+window). Slower (a fetch + a summary call per paper) and needs an LLM, so it's opt-in:
+
+```ini
+# BCIV3_FULLTEXT=1             # fetch full text → summarize → ground (default off = abstracts only)
+# BCIV3_FULLTEXT_TOPK=5        # how many top hits to deep-read
+```
+
+> **Why not just feed whole papers?** One paper is ~7–15k tokens; a dozen would blow past even a 32k
+> window — and **Ollama defaults to a 4,096-token window** regardless of the model's capability, so
+> raw dumps get silently truncated (often cutting the JSON instructions). To ground on more, raise
+> the model's context — e.g. `OLLAMA_CONTEXT_LENGTH=16384 ollama serve` — **and** `BCIV3_CONTEXT_CHARS`
+> together. Abstracts (the default) already carry the paper's key findings and fit comfortably.
+
 ---
 
 ## 4e. Benchmark — which model invents better (`bci bench`)

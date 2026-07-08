@@ -127,7 +127,7 @@ bci serve                     # → http://localhost:8000/app/
 Open **http://localhost:8000/app/**. The cockpit is served from the same origin as the API, so
 **Invent + Simulate** routes through the Python engine (real LLM lenses + critique loop, and your
 local Qwen if wired) with zero extra config. The controls card shows the active provider
-(e.g. `qwen3.5:9b (backend)`).
+(e.g. `qwen2.5:7b (backend)`).
 
 ```bash
 bci serve --port 9000         # pick a port
@@ -138,9 +138,11 @@ Other one-shot commands:
 
 ```bash
 bci health                                            # LLM provider / database / search sources
+bci ping                                              # one tiny timed LLM call — is the model working & fast?
 bci topics                                            # list the 10 topics
 bci invent multiplexed_reporters "acoustic, deep"     # invent + grade from the terminal
 bci record in_vivo_readout "non-destructive"          # search → invent → simulate → save to DB
+bci record snr_depth "deep, safe" --no-ground         # skip the literature search (faster)
 bci search "gas vesicle acoustic reporter genes"      # preview retrieved literature (per-source)
 bci bench --samples 5                                 # leaderboard across all 10 topics
 bci db --stats                                        # counts + pass-rate per category
@@ -187,29 +189,64 @@ The engine runs fully **without** an LLM (deterministic rule-based fallback). To
 ### Example: Ollama + Qwen
 
 ```bash
-# install Ollama, then pull the recommended fast model:
-ollama pull qwen2.5:7b           # fast, direct, emits JSON — the smooth default
-# (optional deeper/slower thinking model: ollama pull qwen3.5:9b)
+# install Ollama, then pull a model sized to your hardware (see the table below):
+ollama pull qwen2.5:7b           # fast, direct, emits JSON — the recommended default
+# smaller / faster on a modest machine:  ollama pull qwen2.5:3b
+# (deeper but slow, needs a strong GPU:  ollama pull qwen3.5:9b)
 ollama serve                     # serves an OpenAI-compatible API on :11434
 ```
 
-Set the environment variables (the adapter is **local-first**); `LOCAL_LLM_MODEL` is just the
-Ollama tag, so point it at your downloaded model:
+**Pick a model that fits your machine** — the simulator grades the *design*, not the model size,
+so a small model that actually runs beats a big one that times out:
 
-**Windows (PowerShell)**
-```powershell
-$env:LOCAL_LLM_URL   = "http://localhost:11434/v1"
-$env:LOCAL_LLM_MODEL = "qwen2.5:7b"
+| model | disk | needs | when to use |
+|---|---|---|---|
+| `qwen2.5:3b`  | ~1.9 GB | modest GPU / decent CPU | slower machines — **fast & reliable** |
+| `qwen2.5:7b`  | ~4.7 GB | a real GPU (≥6 GB VRAM) | the recommended default |
+| `qwen3.5:9b`  | ~6.6 GB | a strong GPU (≥10 GB VRAM) | deepest designs, but slow — a *thinking* model |
+
+Set the config in `backend/.env` (the adapter is **local-first**); `LOCAL_LLM_MODEL` is just the
+Ollama tag, so point it at the model you pulled:
+
+```ini
+# backend/.env
+LOCAL_LLM_URL=http://localhost:11434/v1
+LOCAL_LLM_MODEL=qwen2.5:7b        # or qwen2.5:3b on a slower box
 ```
 
-**Linux / macOS**
+> You can also set it per-shell (`$env:LOCAL_LLM_MODEL="qwen2.5:7b"` on Windows,
+> `export LOCAL_LLM_MODEL=…` on Linux/macOS) — but note a shell variable **overrides `.env`** and
+> persists for the whole session, so if a `bci` run keeps using the wrong model, clear it (see
+> Troubleshooting). Any OpenAI-compatible model works; confirm the exact tag with `ollama list`.
+
+**Verify before you invent** — one tiny timed call confirms the model is wired and fast:
+
 ```bash
-export LOCAL_LLM_URL="http://localhost:11434/v1"
-export LOCAL_LLM_MODEL="qwen2.5:7b"
+bci ping
 ```
 
-> Any OpenAI-compatible model works — the adapter doesn't hard-code Qwen. Confirm the exact tag
-> with `ollama list` after the download finishes, and use that string for `LOCAL_LLM_MODEL`.
+Expect `model=<your tag>` with both modes **OK** in a couple of seconds and a `'{"ok": true}'`
+reply. If it says `fallback`, times out, or errors, `bci ping` prints the exact cause and fix.
+Then the real thing:
+
+```bash
+bci record snr_depth "focused ultrasound, deep cortex, low thermal dose, safe" --no-ground
+```
+
+The header should read **`engine: LLM (local)`** (not `fallback`), and you'll get a real
+Qwen-generated design — full mechanism, materials, protocol, and scores — graded by the simulator.
+
+### Tuning knobs (slow or fussy local models)
+
+All optional, all settable in `backend/.env`. Run `bci ping` to see which you need.
+
+```ini
+# BCI_LLM_TIMEOUT=600      # seconds before giving up (default 300) — raise on a slow/CPU box
+# BCI_LLM_MAX_TOKENS=900   # shorter designs = faster generation (default 2000)
+# BCI_LLM_JSON_MODE=off    # drop response_format if the JSON-grammar mode hangs your Ollama
+#                          #   (bci ping tells you: "plain works, JSON-mode hangs" → set this)
+# BCI_LLM_NO_THINK=1       # thinking models only (qwen3.5) — skip the reasoning block for speed
+```
 
 ### Thinking models (Qwen3.5, DeepSeek-R1)
 
@@ -428,3 +465,63 @@ print(bciv3.LENSES)               # the 10 invention lenses
 git pull origin main
 cd backend && pip install -e ".[dev,plot,api,db]"
 ```
+
+---
+
+## 7. Troubleshooting
+
+**Start with `bci ping`** — it fires one tiny timed call (JSON-mode and plain), prints the active
+`model=…`, the latency, and a specific diagnosis. Most issues below are identified by it.
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| `engine: fallback (no LLM used)` after a run | the LLM call failed → rule-based fallback | run `bci ping` to see why (below) |
+| `bci ping` shows the **wrong** `model=…` | a shell variable is overriding `.env` | clear it (next row) |
+| `note: llm failed (timed out after Ns)` | model too slow for the token budget | smaller model + raise `BCI_LLM_TIMEOUT` |
+| `ping` JSON-mode hangs but plain is OK | Ollama's JSON-grammar mode stalls | `BCI_LLM_JSON_MODE=off` in `.env` |
+| `HTTP 500 … 0xc0000005` from Ollama | Ollama's runner crashed (often after an out-of-memory) | restart Ollama (below) |
+| `engine: … → jsonl` instead of MongoDB | `pymongo` missing or Mongo down | `pip install -e ".[db]"`, set `MONGODB_URI`, start `mongod` |
+
+**A shell variable is overriding `.env`.** Environment variables set in the shell win over the
+`.env` file *for the whole session*. If `bci ping` shows a model you thought you changed, clear the
+stale one:
+```powershell
+# Windows (PowerShell)
+Remove-Item Env:\LOCAL_LLM_MODEL          # then bci reads .env again
+```
+```bash
+# Linux / macOS
+unset LOCAL_LLM_MODEL
+```
+(Or just open a fresh terminal — session variables don't carry over.)
+
+**The model is too slow / times out.** A large model on a weak GPU or CPU can take minutes per
+design. Use a smaller model and give it headroom, in `backend/.env`:
+```ini
+LOCAL_LLM_MODEL=qwen2.5:3b
+BCI_LLM_TIMEOUT=600
+BCI_LLM_MAX_TOKENS=900      # optional — shorter, faster designs
+```
+
+**Ollama crashed (`0xc0000005` / HTTP 500).** The inference subprocess died — common right after a
+model runs out of memory. Kill it and restart, then warm the model directly:
+```powershell
+# Windows
+Get-Process *ollama* | Stop-Process -Force
+# relaunch Ollama from the Start menu, then:
+ollama run qwen2.5:3b "hi"        # should reply normally; /bye to exit (leaves it warm)
+```
+```bash
+# Linux / macOS
+pkill ollama; ollama serve &      # restart the server
+ollama run qwen2.5:3b "hi"
+```
+If `ollama run` *itself* still crashes, reboot (clears a wedged GPU state), then update Ollama.
+
+**PowerShell won't activate the venv** (`the module '.venv' could not be loaded`). Use the `.\`
+prefix so PowerShell runs the script instead of treating it as a module name:
+```powershell
+.\.venv\Scripts\Activate.ps1      # not  .venv\Scripts\Activate.ps1
+```
+If it's blocked by execution policy: `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`
+first. If `.venv` doesn't exist yet, create it: `python -m venv .venv`.

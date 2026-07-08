@@ -198,13 +198,19 @@ With the venv active (your prompt shows `(.venv)`), these work from **any direct
 ```bash
 bci serve                                       # API + cockpit on one port
 bci health                                      # LLM provider / database / search sources
+bci ping                                        # one tiny timed LLM call — is the model working & fast?
 bci topics                                      # list the 10 innovation topics
 bci invent multiplexed_reporters "deep, safe"   # invent + simulate, one-shot
 bci record in_vivo_readout "non-destructive"    # search → invent → simulate → save to DB
+bci record snr_depth "deep, safe" --no-ground   # skip the literature search (faster)
 bci search "gas vesicle acoustic reporter"      # preview retrieved literature (per-source status)
 bci bench --samples 5                           # leaderboard across all 10 topics
 bci db --stats                                  # counts + pass-rate per category
 ```
+
+> **First LLM run using `fallback` instead of your model?** Run **`bci ping`** — it fires one tiny
+> timed call and prints the exact cause (wrong model, timeout, JSON-grammar hang, Ollama crash) with
+> the one-line fix. See [RUN.md § 7 · Troubleshooting](RUN.md#7-troubleshooting).
 
 ### A-B two models (venv active, any directory)
 
@@ -247,9 +253,9 @@ backend/bciv3/
   detailer.py          multi-domain summary (biophysics/physics/electronics/biology) + parts
   recorder.py          invent → simulate → detail → save (one timestamped record)
   store.py             MongoDB persistence (+ JSONL fallback): save / list / grouped / delete
-  cli.py               `bci` CLI: serve · invent · record · db · topics
+  cli.py               `bci` CLI: serve · ping · invent · record · bench · db · topics · search
   api/app.py           FastAPI: serves the cockpit + /api/{invent,record,inventions,rank,stats}
-backend/tests/         20 deterministic tests
+backend/tests/         29 deterministic tests
 backend/scripts/       demo_invent.py
 docs/app/              the cockpit GUI (v1 theme) — served by `bci serve`
 ```

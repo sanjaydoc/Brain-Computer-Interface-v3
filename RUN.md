@@ -3,6 +3,16 @@
 Everything you need to clone, install, run, and (optionally) wire your **local Qwen** LLM.
 Only dependency for the core is **Python 3.10+**. `matplotlib` is optional (for the graph).
 
+### Where to run each command
+
+| Command | Where | Notes |
+|---|---|---|
+| `python -m venv` / `pip install -e …` | **`backend/`** | one-time setup |
+| `.\serve.ps1` · `./serve.sh` | **repo root** | no venv activation needed |
+| `bci serve` · `bci invent` · `bci bench` · `bci db` … | **any dir**, venv **active** | activate once: `source backend/.venv/bin/activate` (or `.\backend\.venv\Scripts\Activate.ps1`) |
+
+> Once the venv is active (prompt shows `(.venv)`), every `bci …` command works from any folder.
+
 ---
 
 ## 1. Clone

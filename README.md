@@ -138,52 +138,60 @@ reduction · scaling · future`
 Only requirement is **Python 3.10+**. (Optional: a local **Ollama + Qwen** for real invention,
 and **MongoDB** for storage — both auto-detected, both have graceful fallbacks.)
 
-### Windows (PowerShell)
+### 1 · One-time setup — run in the **`backend/`** folder
 
+**Windows (PowerShell)**
 ```powershell
 git clone https://github.com/sanjaydoc/Brain-Computer-Interface-v3.git
-cd Brain-Computer-Interface-v3\backend
+cd Brain-Computer-Interface-v3\backend          # ← run these here
 
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned   # one-time, allows venv activate
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e ".[dev,plot,api,db]"
-
-python -m pytest -q                     # expect: 29 passed
-bci serve                               # API + cockpit → http://localhost:8000/app/
+python -m pytest -q                              # expect: 29 passed
 ```
 
-### macOS / Linux (bash or zsh)
-
+**macOS / Linux (bash / zsh)**
 ```bash
 git clone https://github.com/sanjaydoc/Brain-Computer-Interface-v3.git
-cd Brain-Computer-Interface-v3/backend
+cd Brain-Computer-Interface-v3/backend          # ← run these here
 
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev,plot,api,db]"
-
-python -m pytest -q                     # expect: 29 passed
-bci serve                               # API + cockpit → http://localhost:8000/app/
+python -m pytest -q                              # expect: 29 passed
 ```
 
-### Run from the repo root (no `cd`, no activation)
+### 2 · Run the app — from the **repo root** (no `cd`, no activation)
 
 ```powershell
-.\serve.ps1                 # Windows  → http://localhost:8000/app/
+cd Brain-Computer-Interface-v3                   # ← the repo root
+.\serve.ps1                                      # Windows  → http://localhost:8000/app/
 ```
 ```bash
-./serve.sh                  # macOS / Linux → http://localhost:8000/app/
+cd Brain-Computer-Interface-v3                   # ← the repo root
+./serve.sh                                       # macOS / Linux → http://localhost:8000/app/
 ```
 
-These launchers find the venv for you. (With the venv active, plain `bci serve` also works from
-anywhere.)
+The launchers find the venv for you (flags pass through: `.\serve.ps1 --port 9000`).
 
-### The `bci` commands (any OS)
+### 3 · The `bci` commands — **activate the venv once, then run from anywhere**
+
+```powershell
+# Windows — from the repo root:
+.\backend\.venv\Scripts\Activate.ps1
+```
+```bash
+# macOS / Linux — from the repo root:
+source backend/.venv/bin/activate
+```
+
+With the venv active (your prompt shows `(.venv)`), these work from **any directory**:
 
 ```bash
-bci serve                                       # run the API + cockpit on one port
-bci health                                      # show LLM provider / database / search sources
+bci serve                                       # API + cockpit on one port
+bci health                                      # LLM provider / database / search sources
 bci topics                                      # list the 10 innovation topics
 bci invent multiplexed_reporters "deep, safe"   # invent + simulate, one-shot
 bci record in_vivo_readout "non-destructive"    # search → invent → simulate → save to DB
@@ -192,19 +200,10 @@ bci bench --samples 5                           # leaderboard across all 10 topi
 bci db --stats                                  # counts + pass-rate per category
 ```
 
-### From Python
+### A-B two models (venv active, any directory)
 
-```python
-import bciv3
-cand = bciv3.invent("multiplexed_reporters", "acoustic reporters, deep, safe")
-print(bciv3.report("multiplexed_reporters", cand))      # design + verdict + limiting number
-print(bciv3.bench.run(samples=3))                       # leaderboard across all 10 topics
-```
-
-### Wire your local Qwen + A-B two models
-
-Set `LOCAL_LLM_URL` + `LOCAL_LLM_MODEL` (best in `backend/.env`), then swap the model to compare —
-the physics simulator decides the winner:
+Set `LOCAL_LLM_URL` + `LOCAL_LLM_MODEL` (best in `backend/.env`), then swap the model — the
+physics simulator decides the winner:
 
 ```bash
 # macOS / Linux
@@ -215,6 +214,15 @@ LOCAL_LLM_MODEL=qwen3.5:9b bci bench --samples 5
 # Windows (PowerShell)
 $env:LOCAL_LLM_MODEL="qwen2.5:7b"; bci bench --samples 5
 $env:LOCAL_LLM_MODEL="qwen3.5:9b"; bci bench --samples 5
+```
+
+### From Python (venv active)
+
+```python
+import bciv3
+cand = bciv3.invent("multiplexed_reporters", "acoustic reporters, deep, safe")
+print(bciv3.report("multiplexed_reporters", cand))      # design + verdict + limiting number
+print(bciv3.bench.run(samples=3))                       # leaderboard across all 10 topics
 ```
 
 **Full setup — MongoDB, `.env`, Ollama/Qwen, thinking models, per-OS details → [RUN.md](RUN.md).**

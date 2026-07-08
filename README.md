@@ -176,6 +176,7 @@ Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned   # one-tim
 python -m venv .venv                              # create the venv (at the repo root)
 .\.venv\Scripts\Activate.ps1                      # ACTIVATE (prompt shows (.venv))
 pip install -e "backend[api,db]"                  # install: api = cockpit server, db = MongoDB driver
+.\serve.ps1                                       # ▶ RUN → open http://localhost:8000/app/
 ```
 
 **macOS / Linux (bash / zsh)**
@@ -189,6 +190,7 @@ cd Brain-Computer-Interface-v3
 python3 -m venv .venv                             # create the venv (at the repo root)
 source .venv/bin/activate                         # ACTIVATE (prompt shows (.venv))
 pip install -e "backend[api,db]"                  # install: api = cockpit server, db = MongoDB driver
+./serve.sh                                        # ▶ RUN → open http://localhost:8000/app/
 ```
 
 > **Extras:** `api` (cockpit server) and `db` (MongoDB driver) are all you need to run. To also run

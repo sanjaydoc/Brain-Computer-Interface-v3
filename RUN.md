@@ -73,6 +73,9 @@ pip install -e "backend[api,db]"
 
 # 4) (optional, needs [dev]) verify
 python -m pytest backend -q       # expect: 29 passed
+
+# 5) RUN the app (from this same repo-root folder) → open http://localhost:8000/app/
+.\serve.ps1
 ```
 
 ### macOS (bash / zsh)
@@ -83,6 +86,7 @@ python3 -m venv .venv             # 1) create (at the repo root)
 source .venv/bin/activate         # 2) ACTIVATE — prompt shows (.venv)
 pip install -e "backend[api,db]"  # 3) install (add dev,plot for tests + plotting)
 python -m pytest backend -q       # 4) (optional, needs [dev]) verify → 29 passed
+./serve.sh                        # 5) RUN (same repo-root folder) → http://localhost:8000/app/
 ```
 
 ### Linux (bash)
@@ -93,6 +97,7 @@ python3 -m venv .venv             # 1) create (at the repo root)
 source .venv/bin/activate         # 2) ACTIVATE — prompt shows (.venv)
 pip install -e "backend[api,db]"  # 3) install (add dev,plot for tests + plotting)
 python -m pytest backend -q       # 4) (optional, needs [dev]) verify → 29 passed
+./serve.sh                        # 5) RUN (same repo-root folder) → http://localhost:8000/app/
 ```
 
 **Re-activating later** (each new terminal): from the repo root, run
@@ -110,9 +115,13 @@ python backend/scripts/demo_invent.py --plot   # (Windows: python backend\script
 
 `bci serve` runs the API **and** the cockpit on a single port.
 
-**From the repo root — no `cd`, no venv activation** (uses the root launcher scripts):
+**Run from the repo root** — the `Brain-Computer-Interface-v3` folder, where `serve.ps1` / `serve.sh`
+live (the `.\` / `./` means "the script in *this* folder", so you must be in it). No `cd` into
+`backend`, no venv activation — the launcher finds the venv for you. Confirm you're in the right
+place with `dir serve.ps1` (Windows) / `ls serve.sh` (macOS/Linux) — it should list the file.
 
 ```powershell
+# your prompt should end in ...\Brain-Computer-Interface-v3>  (NOT ...\backend>)
 .\serve.ps1                   # Windows  → http://localhost:8000/app/
 .\serve.ps1 --port 9000       # flags pass through
 ```

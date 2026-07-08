@@ -87,11 +87,14 @@ def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend
         return out
 
     if chosen == "llm":
-        import time
+        import os, time
+        # Generation length is the main cost on slow/local models — lower BCI_LLM_MAX_TOKENS
+        # (e.g. 800) for faster, terser inventions on modest hardware.
+        max_tok = int(os.environ.get("BCI_LLM_MAX_TOKENS", 2000))
         for _ in range(3):
             t0 = time.monotonic()
             try:
-                parsed = llm.extract_json(llm.invoke_json(build_invent_prompt(inv, prompt, lens, context), max_tokens=2000))
+                parsed = llm.extract_json(llm.invoke_json(build_invent_prompt(inv, prompt, lens, context), max_tokens=max_tok))
             except Exception as exc:
                 dt = round(time.monotonic() - t0, 1)
                 return _grounded({**_rule_based(inv, prompt), "note": f"llm failed ({exc} after {dt}s); used fallback"})

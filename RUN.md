@@ -139,6 +139,17 @@ export LOCAL_LLM_MODEL="qwen3.5:9b"
 > Any OpenAI-compatible model works — the adapter doesn't hard-code Qwen. Confirm the exact tag
 > with `ollama list` after the download finishes, and use that string for `LOCAL_LLM_MODEL`.
 
+### Thinking models (Qwen3.5, DeepSeek-R1)
+
+Qwen3.5 **reasons before answering** (the `Thinking…` block). The engine handles this: it strips
+the reasoning, prefers the real JSON that follows, and uses a generous token budget so the answer
+isn't cut off. Reasoning generally improves the designs — but it's slower and uses more tokens.
+For faster, cleaner structured output, skip it:
+
+```bash
+export BCI_LLM_NO_THINK=1     # (Windows: $env:BCI_LLM_NO_THINK="1")  → appends /no_think
+```
+
 Then any `invent(...)` / `design(...)` call uses Qwen automatically.
 
 ### Fallback order

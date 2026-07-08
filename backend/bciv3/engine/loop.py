@@ -40,7 +40,7 @@ def _refine(inv, prev, score, backend):
     chosen = backend if backend != "auto" else ("llm" if llm.available() else "fallback")
     if chosen == "llm":
         try:
-            parsed = llm.extract_json(llm.invoke_json(build_refine_prompt(inv, prev, score), max_tokens=700))
+            parsed = llm.extract_json(llm.invoke_json(build_refine_prompt(inv, prev, score), max_tokens=1600))
             if parsed and parsed.get("params"):
                 return {**prev, "title": str(parsed.get("title") or prev["title"])[:80],
                         "mechanism": str(parsed.get("mechanism") or prev.get("mechanism", ""))[:400],

@@ -81,8 +81,14 @@ def _chat(base: str, key: str | None, model: str, prompt: str, max_tokens: int, 
     return data["choices"][0]["message"]["content"]
 
 
-def invoke_json(prompt: str, max_tokens: int = 1400, timeout: float = 90.0) -> str:
-    """Return raw model text (expected JSON). Raises if no provider / on failure."""
+def invoke_json(prompt: str, max_tokens: int = 2000, timeout: float = 120.0) -> str:
+    """Return raw model text (expected JSON). Raises if no provider / on failure.
+
+    For thinking models (Qwen3, etc.) the default token budget is generous so the JSON that
+    follows the reasoning isn't truncated. Set ``BCI_LLM_NO_THINK=1`` to append ``/no_think`` —
+    Qwen3 then skips the reasoning block entirely, for faster, cleaner structured output."""
+    if os.environ.get("BCI_LLM_NO_THINK") in ("1", "true", "yes"):
+        prompt = prompt + "\n/no_think"
     p = provider()
     if p == "local":
         return _chat(os.environ["LOCAL_LLM_URL"], os.environ.get("LOCAL_LLM_KEY"),
@@ -107,16 +113,43 @@ def invoke_json(prompt: str, max_tokens: int = 1400, timeout: float = 90.0) -> s
     raise RuntimeError("no LLM provider configured (set LOCAL_LLM_URL / NVIDIA_API_KEY / …)")
 
 
-def extract_json(text: str) -> dict | None:
-    """Parse a JSON object from model output, tolerating markdown fences / surrounding prose."""
+def _strip_thinking(s: str) -> str:
+    """Remove reasoning blocks that thinking models (Qwen3, DeepSeek-R1, …) emit before the
+    answer — otherwise draft JSON inside the reasoning confuses the extractor."""
     import re
+    s = re.sub(r"<think>[\s\S]*?</think>", " ", s, flags=re.IGNORECASE)
+    s = re.sub(r"<think>[\s\S]*", " ", s, flags=re.IGNORECASE)                 # unclosed
+    s = re.sub(r"Thinking\.\.\.[\s\S]*?\.\.\.\s*done thinking\.?", " ", s, flags=re.IGNORECASE)
+    return s
+
+
+def _balanced_objects(s: str) -> list[str]:
+    """All top-level {...} spans, in order (depth-0 to depth-0)."""
+    objs, depth, start = [], 0, None
+    for i, ch in enumerate(s):
+        if ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}" and depth > 0:
+            depth -= 1
+            if depth == 0 and start is not None:
+                objs.append(s[start:i + 1]); start = None
+    return objs
+
+
+def extract_json(text: str) -> dict | None:
+    """Parse a JSON object from model output — tolerant of markdown fences, surrounding prose, and
+    thinking-model reasoning blocks. Prefers the LAST valid top-level object (the real answer that
+    follows any reasoning), so it survives Qwen3-style `Thinking… …done thinking.` output."""
+    s = _strip_thinking(str(text))
     try:
-        return json.loads(text)
+        return json.loads(s)
     except Exception:
-        m = re.search(r"\{[\s\S]*\}", str(text))
-        if m:
-            try:
-                return json.loads(m.group(0))
-            except Exception:
-                return None
+        pass
+    for frag in reversed(_balanced_objects(s)):     # last well-formed object wins
+        try:
+            return json.loads(frag)
+        except Exception:
+            continue
     return None

@@ -18,6 +18,24 @@ def test_dotenv_loader_sets_missing_and_respects_existing(tmp_path, monkeypatch)
     assert os.environ["LOCAL_LLM_MODEL"] == "already-set"
 
 
+def test_extract_json_survives_thinking_models():
+    from bciv3 import llm
+    # Qwen3-style: reasoning block (with DRAFT json) then the real answer last
+    out = (
+        "<think>\nLet me draft options. Maybe {\"title\": \"draft\", \"params\": {}}\n</think>\n"
+        '{"title": "Real Wave", "params": {"barcode_bits": 48, "channels": 16}}'
+    )
+    d = llm.extract_json(out)
+    assert d["title"] == "Real Wave" and d["params"]["barcode_bits"] == 48
+
+    # plaintext "Thinking... ...done thinking." form
+    out2 = "Thinking...\nblah {\"x\": 1} blah\n...done thinking.\n\n{\"title\": \"Y\", \"params\": {\"a\": 2}}"
+    d2 = llm.extract_json(out2)
+    assert d2["title"] == "Y" and d2["params"]["a"] == 2
+
+    assert llm.extract_json("no json here") is None
+
+
 def test_api_endpoints():
     pytest.importorskip("fastapi")
     from fastapi.testclient import TestClient

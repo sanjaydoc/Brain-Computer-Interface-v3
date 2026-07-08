@@ -76,7 +76,7 @@ def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend
     if chosen == "llm":
         for _ in range(3):
             try:
-                parsed = llm.extract_json(llm.invoke_json(build_invent_prompt(inv, prompt, lens), max_tokens=900))
+                parsed = llm.extract_json(llm.invoke_json(build_invent_prompt(inv, prompt, lens), max_tokens=2000))
             except Exception as exc:
                 return {**_rule_based(inv, prompt), "note": f"llm failed ({exc}); used fallback"}
             if parsed and parsed.get("params"):

@@ -116,8 +116,9 @@ The engine runs fully **without** an LLM (deterministic rule-based fallback). To
 ### Example: Ollama + Qwen
 
 ```bash
-# install Ollama, then pull the model you're using (e.g. Qwen 3.5 9B):
-ollama pull qwen3.5:9b            # use whatever tag `ollama list` shows
+# install Ollama, then pull the recommended fast model:
+ollama pull qwen2.5:7b           # fast, direct, emits JSON — the smooth default
+# (optional deeper/slower thinking model: ollama pull qwen3.5:9b)
 ollama serve                     # serves an OpenAI-compatible API on :11434
 ```
 
@@ -127,13 +128,13 @@ Ollama tag, so point it at your downloaded model:
 **Windows (PowerShell)**
 ```powershell
 $env:LOCAL_LLM_URL   = "http://localhost:11434/v1"
-$env:LOCAL_LLM_MODEL = "qwen3.5:9b"
+$env:LOCAL_LLM_MODEL = "qwen2.5:7b"
 ```
 
 **Linux / macOS**
 ```bash
 export LOCAL_LLM_URL="http://localhost:11434/v1"
-export LOCAL_LLM_MODEL="qwen3.5:9b"
+export LOCAL_LLM_MODEL="qwen2.5:7b"
 ```
 
 > Any OpenAI-compatible model works — the adapter doesn't hard-code Qwen. Confirm the exact tag

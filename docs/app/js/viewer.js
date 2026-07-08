@@ -160,7 +160,7 @@ function showVerdict(tid, cand, s, extra = {}) {
   $('c-via').textContent = 'via ' + via;
   // multi-domain detail (from the backend record) + parts + save status
   const det = extra.detail, parts = extra.parts;
-  $('c-detail').innerHTML = det ? '<hr class="divider"/><div class="eyebrow">Detailed summary</div>' +
+  $('c-detail').innerHTML = det ? '<hr class="divider"/><div class="eyebrow">Law simulator · biophysics · physics · electronics</div>' +
     ['biophysics', 'physics', 'electronics', 'biology'].filter((k) => det[k] && det[k] !== '—')
       .map((k) => `<div class="detsec"><span class="lbl">${k}</span><p>${esc(det[k])}</p></div>`).join('') : '';
   $('c-parts').innerHTML = (parts && parts.length) ? '<div class="eyebrow" style="margin-top:.5rem">Parts</div>' +
@@ -185,11 +185,23 @@ function fmt(v) {
 }
 
 // ---- events ----
+const setStatus = (t) => { const e = $('invent-status'); if (e) e.textContent = t; };
+
 async function inventSelected() {
   selected = $('topic').value;
-  $('invent').textContent = apiUp ? '… inventing (LLM)' : '… inventing';
+  const grounding = $('ground') && $('ground').checked;
+  $('invent').disabled = true;
+  $('invent').textContent = '⏳ working…';
+  // show the pipeline steps so the simulator (last step) is visible
+  setStatus(apiUp
+    ? (grounding ? '① 🔎 searching literature  →  ② 🧠 inventing (LLM)  →  ③ ⚖️ simulating…'
+                 : '① 🧠 inventing (LLM)  →  ② ⚖️ simulating…')
+    : '⚖️ simulating (rule-based)…');
   const out = await runOne(selected, { save: true });     // auto-save every invention
   showVerdict(selected, out.cand, out.s, out); draw();
+  setStatus('✓ ⚖️ simulated — verdict + biophysics/physics/electronics on the right');
+  setTimeout(() => setStatus(''), 5000);
+  $('invent').disabled = false;
   $('invent').textContent = '✨ Invent + Simulate';
 }
 $('topic').addEventListener('change', inventSelected);

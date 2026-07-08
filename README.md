@@ -40,6 +40,13 @@ _Author: **Dr. Sanjay Anbu**_
 > in-model**; the right-hand tag is the **fidelity** of that verdict (`full-sim` = fully modelled;
 > `physics-only` / `estimate` / `limits-only` = honestly partial).
 
+<table>
+<tr>
+<td width="50%"><img src="docs/media/bench.png" alt="Benchmark leaderboard" /><br/><sub><b>📊 Benchmark</b> — sweep every topic × N samples; a pass-rate + mean-score leaderboard per category, with past-run history. Run it per model to A-B them.</sub></td>
+<td width="50%"><img src="docs/media/saved.png" alt="Saved inventions grouped by category" /><br/><sub><b>📚 Saved inventions</b> — every invention auto-saved to MongoDB, grouped under the 10 innovation categories, each with a 🗑 delete.</sub></td>
+</tr>
+</table>
+
 ---
 
 ## 🎯 Project goals
@@ -128,32 +135,77 @@ reduction · scaling · future`
 
 ## ⚡ Quickstart
 
-```bash
-cd backend
-python3 -m venv .venv && source .venv/bin/activate      # Windows: .\.venv\Scripts\Activate.ps1
-pip install -e ".[dev,plot,api,db]"
-python -m pytest -q                    # 29 passed
-python scripts/demo_invent.py --plot   # scorecard + docs/media/scorecard.png
+Only requirement is **Python 3.10+**. (Optional: a local **Ollama + Qwen** for real invention,
+and **MongoDB** for storage — both auto-detected, both have graceful fallbacks.)
 
-bci serve                              # API + cockpit on one port → http://localhost:8000/app/
+### Windows (PowerShell)
+
+```powershell
+git clone https://github.com/sanjaydoc/Brain-Computer-Interface-v3.git
+cd Brain-Computer-Interface-v3\backend
+
+Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned   # one-time, allows venv activate
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
+pip install -e ".[dev,plot,api,db]"
+
+python -m pytest -q                     # expect: 29 passed
+bci serve                               # API + cockpit → http://localhost:8000/app/
 ```
+
+### macOS / Linux (bash or zsh)
+
+```bash
+git clone https://github.com/sanjaydoc/Brain-Computer-Interface-v3.git
+cd Brain-Computer-Interface-v3/backend
+
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -e ".[dev,plot,api,db]"
+
+python -m pytest -q                     # expect: 29 passed
+bci serve                               # API + cockpit → http://localhost:8000/app/
+```
+
+### The `bci` commands (any OS)
+
+```bash
+bci serve                                       # run the API + cockpit on one port
+bci health                                      # show LLM provider / database / search sources
+bci topics                                      # list the 10 innovation topics
+bci invent multiplexed_reporters "deep, safe"   # invent + simulate, one-shot
+bci record in_vivo_readout "non-destructive"    # search → invent → simulate → save to DB
+bci search "gas vesicle acoustic reporter"      # preview retrieved literature (per-source status)
+bci bench --samples 5                           # leaderboard across all 10 topics
+bci db --stats                                  # counts + pass-rate per category
+```
+
+### From Python
 
 ```python
 import bciv3
 cand = bciv3.invent("multiplexed_reporters", "acoustic reporters, deep, safe")
 print(bciv3.report("multiplexed_reporters", cand))      # design + verdict + limiting number
+print(bciv3.bench.run(samples=3))                       # leaderboard across all 10 topics
 ```
 
-**Choose / A-B a model** — the model is just `LOCAL_LLM_MODEL`; swap it per run and let the law
-simulator decide which invents better (more passes / higher scores):
+### Wire your local Qwen + A-B two models
+
+Set `LOCAL_LLM_URL` + `LOCAL_LLM_MODEL` (best in `backend/.env`), then swap the model to compare —
+the physics simulator decides the winner:
 
 ```bash
-LOCAL_LLM_MODEL=qwen2.5:7b bci invent multiplexed_reporters "acoustic, deep, safe"
-LOCAL_LLM_MODEL=qwen3.5:9b bci invent multiplexed_reporters "acoustic, deep, safe"
-# Windows: $env:LOCAL_LLM_MODEL="qwen3.5:9b"; bci invent multiplexed_reporters "acoustic, deep, safe"
+# macOS / Linux
+LOCAL_LLM_MODEL=qwen2.5:7b bci bench --samples 5
+LOCAL_LLM_MODEL=qwen3.5:9b bci bench --samples 5
+```
+```powershell
+# Windows (PowerShell)
+$env:LOCAL_LLM_MODEL="qwen2.5:7b"; bci bench --samples 5
+$env:LOCAL_LLM_MODEL="qwen3.5:9b"; bci bench --samples 5
 ```
 
-**Full setup for Windows / Linux / macOS + wiring your local Qwen + A-B'ing models → [RUN.md](RUN.md).**
+**Full setup — MongoDB, `.env`, Ollama/Qwen, thinking models, per-OS details → [RUN.md](RUN.md).**
 
 ---
 

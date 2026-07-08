@@ -73,8 +73,13 @@ bci serve --reload            # auto-reload while developing
 Other one-shot commands:
 
 ```bash
+bci health                                            # LLM provider / database / search sources
 bci topics                                            # list the 10 topics
 bci invent multiplexed_reporters "acoustic, deep"     # invent + grade from the terminal
+bci record in_vivo_readout "non-destructive"          # search → invent → simulate → save to DB
+bci search "gas vesicle acoustic reporter genes"      # preview retrieved literature (per-source)
+bci bench --samples 5                                 # leaderboard across all 10 topics
+bci db --stats                                        # counts + pass-rate per category
 ```
 
 > If the backend isn't running, the cockpit silently falls back to the in-browser proposer, so
@@ -97,9 +102,11 @@ cp .env.example .env
 ```ini
 # backend/.env
 LOCAL_LLM_URL=http://localhost:11434/v1
-LOCAL_LLM_MODEL=qwen3.5:9b
+LOCAL_LLM_MODEL=qwen2.5:7b
 NVIDIA_API_KEY=nvapi-xxxxxxxxxxxxxxxxxxxxxxxx
 BCI_LLM_MODEL=qwen/qwen2.5-7b-instruct
+MONGODB_URI=mongodb://localhost:27017
+MONGODB_DB=bciv3
 ```
 
 Provider order stays local (Qwen) → NVIDIA NIM → cloud → rule-based, so with both set, Qwen is

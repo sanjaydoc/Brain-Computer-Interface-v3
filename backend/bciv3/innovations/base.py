@@ -42,6 +42,7 @@ class Innovation:
     param_schema: dict                 # {name: default} — what the engine proposes
     _evaluate: Callable[[dict], Score]
     fidelity: str = "full-sim"
+    keywords: str = ""                 # concise domain search seed for literature grounding
 
     def evaluate(self, params: dict) -> Score:
         merged = {**self.param_schema, **(params or {})}

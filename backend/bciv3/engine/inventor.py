@@ -79,7 +79,11 @@ def invent(topic_id: str, prompt: str = "", *, lens: str = DEFAULT_LENS, backend
     citations, context = [], ""
     if ground:
         from ..search import retrieve
-        res = retrieve(f"{inv.title} {prompt}".strip())
+        # A concise, domain-accurate seed (per-topic keywords) grounds far better than the whole
+        # title+prompt sentence, which PubMed can't AND-match and arXiv matches loosely (→ astro /
+        # LLM-pipeline papers bleeding in). Fall back to the title if a topic has no keywords.
+        query = getattr(inv, "keywords", "") or inv.title
+        res = retrieve(query)
         citations, context = res["citations"], res["context"]
 
     def _grounded(out: dict) -> dict:

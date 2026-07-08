@@ -17,6 +17,29 @@ from __future__ import annotations
 import json
 import os
 import urllib.request
+from pathlib import Path
+
+
+def _load_dotenv() -> None:
+    """Zero-dependency .env loader: read KEY=VALUE lines from the first .env found walking up from
+    here (backend/ or repo root). Existing environment variables always win, so real exported vars
+    override the file. Paste LOCAL_LLM_URL / LOCAL_LLM_MODEL / NVIDIA_API_KEY etc. into .env."""
+    here = Path(__file__).resolve()
+    for base in [Path.cwd(), *here.parents]:
+        env = base / ".env"
+        if env.is_file():
+            for line in env.read_text().splitlines():
+                line = line.strip()
+                if not line or line.startswith("#") or "=" not in line:
+                    continue
+                k, v = line.split("=", 1)
+                k, v = k.strip(), v.strip().strip('"').strip("'")
+                if k and k not in os.environ:
+                    os.environ[k] = v
+            return
+
+
+_load_dotenv()
 
 NVIDIA_BASE = "https://integrate.api.nvidia.com/v1"
 OPENAI_BASE = "https://api.openai.com/v1"

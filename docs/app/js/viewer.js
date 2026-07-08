@@ -7,6 +7,21 @@ const $ = (id) => document.getElementById(id);
 const scores = {};                 // tid -> {score, passed, fidelity}
 let selected = TOPIC_IDS[0];
 
+// Optional Python backend (FastAPI). If it's up, 'Invent + Simulate' routes there so the real
+// LLM lenses + critique loop run (and your local Qwen, if wired). Otherwise the browser proposer.
+const API = localStorage.getItem('bciv3_api') || 'http://localhost:8000';
+let apiUp = false, apiProvider = null;
+
+async function probeApi() {
+  try {
+    const r = await fetch(API + '/api/health', { signal: AbortSignal.timeout(1200) });
+    if (!r.ok) return;
+    const h = await r.json();
+    apiUp = true; apiProvider = h.backends?.provider || null;
+    $('backend').textContent = apiProvider ? `${apiProvider} (backend)` : 'backend (no LLM)';
+  } catch { apiUp = false; }
+}
+
 // ---- populate selectors ----
 for (const tid of TOPIC_IDS) {
   const o = document.createElement('option');
@@ -69,12 +84,32 @@ function roundRect(x, y, w, h, r) {
   ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
 }
 
-// ---- run one invention ----
-function runOne(tid) {
+// ---- run one invention (backend if up → real LLM lenses; else browser proposer) ----
+function runLocal(tid) {
   const cand = invent(tid, $('prompt').value);
   const s = simulate(tid, cand);
   scores[tid] = { score: s.score, passed: s.passed, fidelity: TOPICS[tid].fidelity };
   return { cand, s };
+}
+
+async function runOne(tid) {
+  if (!apiUp) return runLocal(tid);
+  try {
+    const r = await fetch(API + '/api/invent', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ topic: tid, prompt: $('prompt').value, lens: $('lens').value, backend: 'auto' }),
+      signal: AbortSignal.timeout(120000),
+    });
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    const res = d.result, cand = { ...d.candidate };
+    const s = { score: res.score, passed: res.passed, limiting: res.limiting, metrics: res.metrics };
+    scores[tid] = { score: res.score, passed: res.passed, fidelity: res.fidelity };
+    return { cand, s };
+  } catch (e) {
+    apiUp = false; $('backend').textContent = 'rule-based (browser)';
+    return runLocal(tid);
+  }
 }
 
 function showVerdict(tid, cand, s) {
@@ -93,9 +128,17 @@ function showVerdict(tid, cand, s) {
   $('c-domain').textContent = `${t.domain} · laws: ${t.laws.join(', ')}`;
   $('c-params').innerHTML = Object.entries(cand.params).map(([k, v]) =>
     `<div class="kv"><span>${k}</span><b>${fmt(v)}</b></div>`).join('');
-  $('c-assume').innerHTML = `<li>spec-aware rule-based proposal</li><li>assumptions unverified in vivo</li>`;
-  $('c-risks').innerHTML = `<li>passes = physically admissible, not proven in a living brain</li>`;
+  const li = (arr, fb) => (arr && arr.length ? arr : fb).map((x) => `<li>${esc(x)}</li>`).join('');
+  $('c-assume').innerHTML = li(cand.assumptions, ['spec-aware proposal', 'assumptions unverified in vivo']);
+  $('c-risks').innerHTML = li(cand.risks, ['passes = physically admissible, not proven in a living brain']);
+  // mechanism (LLM path) + provenance
+  const via = cand.backend === 'llm' ? `${cand.provider || 'llm'} · lens: ${cand.lens || '?'}`
+            : cand.backend === 'llm-refine' ? 'llm (refined)' : 'rule-based';
+  $('c-mech').innerHTML = cand.mechanism ? `<div class="eyebrow" style="margin-top:.6rem">Mechanism</div><p class="small" style="color:var(--ink-2)">${esc(cand.mechanism)}</p>` : '';
+  $('c-via').textContent = 'via ' + via;
 }
+
+function esc(s) { return String(s).replace(/[<>&]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;' }[c])); }
 
 function fmt(v) {
   if (typeof v === 'boolean') return v ? 'yes' : 'no';
@@ -105,14 +148,26 @@ function fmt(v) {
 }
 
 // ---- events ----
-$('topic').addEventListener('change', (e) => { selected = e.target.value; const { cand, s } = runOne(selected); showVerdict(selected, cand, s); draw(); });
-$('invent').addEventListener('click', () => { selected = $('topic').value; const { cand, s } = runOne(selected); showVerdict(selected, cand, s); draw(); });
-$('all').addEventListener('click', () => {
-  for (const tid of TOPIC_IDS) runOne(tid);
-  const { cand, s } = runOne(selected); showVerdict(selected, cand, s); draw();
+async function inventSelected() {
+  selected = $('topic').value;
+  $('invent').textContent = apiUp ? '… inventing (LLM)' : '… inventing';
+  const { cand, s } = await runOne(selected);
+  showVerdict(selected, cand, s); draw();
+  $('invent').textContent = '✨ Invent + Simulate';
+}
+$('topic').addEventListener('change', inventSelected);
+$('invent').addEventListener('click', inventSelected);
+$('all').addEventListener('click', async () => {
+  $('all').textContent = '… grading all';
+  for (const tid of TOPIC_IDS) { await runOne(tid); draw(); }
+  const { cand, s } = await runOne(selected); showVerdict(selected, cand, s); draw();
+  $('all').textContent = 'grade all 10 topics';
 });
 
 // ---- init ----
 $('topic').value = selected;
-{ const { cand, s } = runOne(selected); showVerdict(selected, cand, s); }
+(async () => {
+  await probeApi();
+  const { cand, s } = await runOne(selected); showVerdict(selected, cand, s); draw();
+})();
 resize();

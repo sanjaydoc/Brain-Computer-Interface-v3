@@ -52,7 +52,57 @@ simulator, prints a scorecard, and writes `docs/media/scorecard.png`.
 
 ---
 
-## 3. Wire your local LLM (Qwen) — optional
+## 3. Live LLM in the cockpit — the FastAPI backend
+
+The browser cockpit runs the deterministic proposer on its own. Start the backend and it routes
+**Invent + Simulate** through the Python engine — so the real LLM lenses + critique loop (and your
+local Qwen) run, and the design flows back into the cockpit.
+
+```bash
+cd backend
+pip install -e ".[api]"
+uvicorn bciv3.api.app:app --port 8000        # add --reload while developing
+```
+
+Then serve the cockpit (separate terminal) and open it — it auto-detects the backend on
+`http://localhost:8000` and shows the active provider (e.g. `qwen3.5:9b (backend)`):
+
+```bash
+cd docs && python -m http.server 8097        # → http://localhost:8097/app/
+```
+
+> Point the cockpit at a different backend URL from the browser console:
+> `localStorage.setItem('bciv3_api','http://host:8000')`. If the backend is down, the cockpit
+> silently falls back to the in-browser proposer.
+
+---
+
+## 3b. Configure keys with a `.env` file (recommended)
+
+Paste your settings once into `backend/.env` (copied from `backend/.env.example`) instead of
+exporting every time. The engine auto-loads it; real exported vars still win. **`.env` is
+git-ignored — never commit it.**
+
+```bash
+cd backend
+cp .env.example .env
+# then edit .env:
+```
+
+```ini
+# backend/.env
+LOCAL_LLM_URL=http://localhost:11434/v1
+LOCAL_LLM_MODEL=qwen3.5:9b
+NVIDIA_API_KEY=nvapi-xxxxxxxxxxxxxxxxxxxxxxxx
+BCI_LLM_MODEL=qwen/qwen2.5-7b-instruct
+```
+
+Provider order stays local (Qwen) → NVIDIA NIM → cloud → rule-based, so with both set, Qwen is
+used first and NIM is the automatic fallback.
+
+---
+
+## 4. Wire your local LLM (Qwen) — details
 
 The engine runs fully **without** an LLM (deterministic rule-based fallback). To use your local
 **Qwen 7B** for real creative invention, point the adapter at any OpenAI-compatible server
@@ -99,7 +149,7 @@ export BCI_LLM_MODEL="qwen/qwen2.5-7b-instruct"
 
 ---
 
-## 4. Use it from Python
+## 5. Use it from Python
 
 ```python
 import bciv3
@@ -121,7 +171,7 @@ print(bciv3.LENSES)               # the 10 invention lenses
 
 ---
 
-## 5. Updating later
+## 6. Updating later
 
 ```bash
 git pull origin main

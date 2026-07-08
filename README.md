@@ -11,7 +11,7 @@ physics can move the score.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-0d0d0f.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-2f6fed.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-13%20passing-0e9f6e.svg)](backend/tests)
+[![Tests](https://img.shields.io/badge/tests-15%20passing-0e9f6e.svg)](backend/tests)
 [![Topics](https://img.shields.io/badge/innovation%20topics-10-635bff.svg)](#-the-10-innovation-topics)
 [![Lenses](https://img.shields.io/badge/invention%20lenses-10-635bff.svg)](#-the-invention-engine)
 [![LLM](https://img.shields.io/badge/LLM-local%20Qwen%20first%20·%20NIM%20fallback-d98218.svg)](RUN.md)
@@ -51,8 +51,10 @@ _Author: **Dr. Sanjay Anbu**_
 - ✅ **Invent → simulate → refine loop** — failures feed the limiting number back to the engine.
 - ✅ **Candidate ranking** — one design per lens, ordered by simulated score (an idea tournament).
 - ✅ **Honest fidelity flags** — a pass means *physically admissible*, never *proven in a living brain*.
-- ✅ **13 tests, deterministic** — the whole pipeline runs offline in CI.
+- ✅ **15 tests, deterministic** — the whole pipeline runs offline in CI.
 - ✅ **Cockpit GUI** — v1's theme + cockpit view; pick a topic, invent, and watch the law simulator grade it live in the browser.
+- ✅ **Thin FastAPI backend** — the cockpit calls the Python engine (and your local Qwen) live; auto-detected, graceful browser fallback.
+- ✅ **`.env` config** — paste `LOCAL_LLM_URL` / `LOCAL_LLM_MODEL` / `NVIDIA_API_KEY` once (zero-dependency loader, git-ignored).
 - ⬜ **Amber topics as full estimators** — richer models for assembly / twin-sim at scale (Phase 4).
 
 ---

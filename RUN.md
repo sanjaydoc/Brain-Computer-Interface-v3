@@ -154,6 +154,8 @@ bci ping                                              # one tiny timed LLM call 
 bci topics                                            # list the 10 topics
 bci invent multiplexed_reporters "acoustic, deep"     # invent + grade from the terminal
 bci record in_vivo_readout "non-destructive"          # search → invent → simulate → save to DB
+bci record neuron_delivery "AAV, crosses BBB" --constraint noninvasive   # biomolecular only (no electrodes)
+bci record scan_throughput "whole brain fast" --constraint invasive      # electrodes / implants allowed
 bci record snr_depth "deep, safe" --no-ground         # skip the literature search (faster)
 bci invent snr_depth "deep, safe" --model qwen2.5:3b  # pick the model for this run (A-B models)
 bci search "gas vesicle acoustic reporter genes"      # preview retrieved literature (per-source)

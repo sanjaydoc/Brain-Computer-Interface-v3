@@ -232,11 +232,18 @@ bci ping                                        # one tiny timed LLM call — is
 bci topics                                      # list the 10 innovation topics
 bci invent multiplexed_reporters "deep, safe"   # invent + simulate, one-shot
 bci record in_vivo_readout "non-destructive"    # search → invent → simulate → save to DB
+bci record neuron_delivery "AAV, crosses BBB" --constraint noninvasive   # biomolecular only (no electrodes)
+bci record scan_throughput "whole brain fast" --constraint invasive      # electrodes / implants allowed
 bci record snr_depth "deep, safe" --no-ground   # skip the literature search (faster)
+bci invent snr_depth "deep, safe" --model qwen2.5:3b   # pick the model for this run (A-B models)
 bci search "gas vesicle acoustic reporter"      # preview retrieved literature (per-source status)
 bci bench --samples 5                           # leaderboard across all 10 topics
 bci db --stats                                  # counts + pass-rate per category
 ```
+
+> **Approach constraint:** `--constraint noninvasive` (default in the GUI) forces a **biomolecular**
+> design — no electrodes, implants, or surgery; use `--constraint invasive` to allow hardware. It's
+> the **approach constraint** dropdown in the cockpit, and it's saved with every record.
 
 > **First LLM run using `fallback` instead of your model?** Run **`bci ping`** — it fires one tiny
 > timed call and prints the exact cause (wrong model, timeout, JSON-grammar hang, Ollama crash) with

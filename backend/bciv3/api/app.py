@@ -135,6 +135,26 @@ def do_stats() -> dict:
     return store.stats()
 
 
+class BenchReq(BaseModel):
+    samples: int = 3
+    prompt: str = ""
+    topic: str | None = None
+    backend: str = "auto"
+    ground: bool = False
+
+
+@app.post("/api/bench")
+def do_bench(req: BenchReq) -> dict:
+    import bciv3
+    return bciv3.bench.run(samples=req.samples, prompt=req.prompt, backend=req.backend,
+                           ground=req.ground, topics=[req.topic] if req.topic else None)
+
+
+@app.get("/api/benchmarks")
+def do_benchmarks(limit: int = 20) -> dict:
+    return {"benchmarks": store.list_benchmarks(limit=limit)}
+
+
 # --- static cockpit (mounted last so /api/* always wins) ---------------------
 if DOCS.is_dir():
     @app.get("/")

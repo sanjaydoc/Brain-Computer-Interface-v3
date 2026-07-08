@@ -16,8 +16,8 @@ from pathlib import Path
 _JSONL = Path(os.environ.get("BCIV3_JSONL", "inventions.jsonl"))
 
 
-def _mongo():
-    """Return a live `inventions` collection, or None to signal JSONL fallback."""
+def _col(name: str = "inventions"):
+    """Return a live Mongo collection, or None to signal JSONL fallback."""
     try:
         import pymongo
     except Exception:
@@ -26,15 +26,20 @@ def _mongo():
         uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
         client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=800)
         client.admin.command("ping")                       # fail fast if Mongo is down
-        col = client[os.environ.get("MONGODB_DB", "bciv3")]["inventions"]
-        col.create_index([("topic", 1)]); col.create_index([("score.score", -1)])
+        col = client[os.environ.get("MONGODB_DB", "bciv3")][name]
+        if name == "inventions":
+            col.create_index([("topic", 1)]); col.create_index([("score.score", -1)])
         return col
     except Exception:
         return None
 
 
+def _mongo():
+    return _col("inventions")
+
+
 def backend() -> str:
-    return "mongodb" if _mongo() is not None else f"jsonl ({_JSONL})"
+    return "mongodb" if _col() is not None else f"jsonl ({_JSONL})"
 
 
 def save(record: dict) -> str:
@@ -88,6 +93,33 @@ def list_grouped(limit_per: int = 100) -> dict:
     for r in list_records(limit=100000):
         out.setdefault(r.get("topic", "?"), []).append(r)
     return {t: rows[:limit_per] for t, rows in out.items()}
+
+
+_BENCH_JSONL = Path(os.environ.get("BCIV3_BENCH_JSONL", "benchmarks.jsonl"))
+
+
+def save_bench(summary: dict) -> str:
+    """Persist a compact benchmark summary (leaderboard) to the `benchmarks` collection."""
+    rec = dict(summary)
+    rec.setdefault("id", uuid.uuid4().hex)
+    col = _col("benchmarks")
+    if col is not None:
+        rec["_id"] = rec["id"]
+        col.insert_one(rec)
+    else:
+        with open(_BENCH_JSONL, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, default=str) + "\n")
+    return rec["id"]
+
+
+def list_benchmarks(limit: int = 20) -> list[dict]:
+    col = _col("benchmarks")
+    if col is not None:
+        return list(col.find({}, {"_id": 0}).sort("ts", -1).limit(int(limit)))
+    if not _BENCH_JSONL.exists():
+        return []
+    rows = [json.loads(l) for l in _BENCH_JSONL.read_text(encoding="utf-8").splitlines() if l.strip()]
+    return list(reversed(rows))[:int(limit)]
 
 
 def stats() -> dict:

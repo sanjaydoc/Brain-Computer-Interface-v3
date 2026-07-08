@@ -77,6 +77,22 @@ def _search(args) -> int:
     return 0
 
 
+def _bench(args) -> int:
+    import bciv3
+    res = bciv3.bench.run(samples=args.samples, prompt=args.prompt or "",
+                          topics=[args.topic] if args.topic else None,
+                          backend=args.backend, ground=args.ground,
+                          save_attempts=args.save_attempts)
+    m = res["model"] or res["provider"] or "rule-based"
+    print(f"model: {m}  |  samples/topic: {res['samples_per_topic']}  |  grounded: {res['grounded']}")
+    print(f"MEAN pass-rate: {res['mean_pass_rate']}   MEAN score: {res['mean_score']}\n")
+    print(f"{'topic':<24}{'pass-rate':>10}{'mean':>9}{'best':>7}{'n':>4}")
+    for tid, t in res["per_topic"].items():
+        print(f"{tid:<24}{t['pass_rate']:>10}{t['mean_score']:>9}{t['best_score']:>7}{t['samples']:>4}")
+    print(f"\nsaved leaderboard → {bciv3.store.backend()} (benchmarks)")
+    return 0
+
+
 def _db(args) -> int:
     import bciv3
     if args.stats:
@@ -123,6 +139,15 @@ def main(argv=None) -> int:
     sr = sub.add_parser("search", help="preview retrieved literature / prior art for a query")
     sr.add_argument("query")
     sr.set_defaults(fn=_search)
+
+    bn = sub.add_parser("bench", help="sweep topics N times → pass-rate + mean-score leaderboard")
+    bn.add_argument("--samples", type=int, default=3)
+    bn.add_argument("--topic", default=None, help="one topic (default: all 10)")
+    bn.add_argument("--prompt", default="")
+    bn.add_argument("--backend", default="auto", choices=["auto", "llm", "fallback"])
+    bn.add_argument("--ground", action="store_true", help="ground each attempt in literature (slower)")
+    bn.add_argument("--save-attempts", action="store_true", help="also save every invention to the DB")
+    bn.set_defaults(fn=_bench)
 
     db = sub.add_parser("db", help="list saved inventions (or --stats)")
     db.add_argument("topic", nargs="?", default=None)

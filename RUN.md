@@ -30,7 +30,7 @@ python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 pip install -e ".[dev,plot,api,db]"
 
-python -m pytest -q               # expect: 26 passed
+python -m pytest -q               # expect: 29 passed
 python scripts\demo_invent.py --plot
 ```
 
@@ -43,7 +43,7 @@ python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev,plot,api,db]"
 
-python -m pytest -q               # expect: 26 passed
+python -m pytest -q               # expect: 29 passed
 python scripts/demo_invent.py --plot
 ```
 
@@ -252,6 +252,34 @@ citations show in the candidate aside and are saved to the record's `citations` 
 
 > Sources that fail, time out, or aren't configured contribute nothing — grounding never breaks a
 > run. Offline, inventions still work (ungrounded).
+
+---
+
+## 4e. Benchmark — which model invents better (`bci bench`)
+
+Sweep the topics N times, grade every attempt with the simulator, and get a **pass-rate +
+mean/best-score leaderboard** — saved compactly to a `benchmarks` collection.
+
+```bash
+bci bench --samples 5                 # all 10 topics × 5 samples, current model
+bci bench --topic snr_depth --samples 8
+bci bench --ground                    # ground each attempt in literature (slower)
+bci bench --save-attempts             # also persist every invention to the DB
+```
+
+**A-B two models** — run it once per model and compare the leaderboards:
+
+```bash
+# .env: LOCAL_LLM_MODEL=qwen2.5:7b
+bci bench --samples 5
+# .env: LOCAL_LLM_MODEL=qwen3.5:9b   (or a per-session override)
+bci bench --samples 5
+```
+
+Each run records the model, mean pass-rate, and mean score, so whichever produces more
+physically-admissible, higher-scoring designs is the empirical winner. (With the rule-based
+fallback every topic passes deterministically — the leaderboard gets interesting once an LLM is
+driving, because temperature makes the samples vary.)
 
 ---
 

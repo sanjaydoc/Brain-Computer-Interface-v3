@@ -313,6 +313,52 @@ driving, because temperature makes the samples vary.)
 
 ---
 
+## 4f. Example commands (`bci invent` / `bci record`)
+
+Format: `bci invent <topic_id> "<prompt>"` — prints the design + simulator verdict.
+Use `bci record …` for the same **plus** literature grounding + save to MongoDB.
+(Venv active; run from any directory. Add `aggressive` to a prompt to push parameters harder.)
+
+```bash
+# 2 · Massively-multiplexed reporters — the multiplexing wall
+bci invent multiplexed_reporters "acoustic reporters with thousands of distinguishable channels, deep, safe"
+
+# 1 · In-vivo, non-destructive barcode readout — door #1
+bci invent in_vivo_readout "read barcodes 75 mm deep in a living brain, under all safety limits"
+
+# 4 · ~100% neuron delivery
+bci invent neuron_delivery "BBB-crossing vector that labels every neuron with a safe viral dose"
+
+# 5 · Signal boost + noise cut at depth
+bci invent snr_depth "brighter reporters and heavy averaging so it still reads at depth, aggressive"
+
+# 6 · Whole-brain scan throughput
+bci invent scan_throughput "read the whole brain in under 30 days with massively parallel channels"
+
+# 3 · Trans-synaptic pairing at scale
+bci invent transsynaptic_pairing "pair pre and post barcodes across every synapse with low false-pair rate"
+
+# 10 · Human safety of the whole chain
+bci invent human_safety "keep ultrasound intensity, mechanical index, and AAV dose well inside limits"
+```
+
+Flags:
+
+```bash
+bci invent multiplexed_reporters "acoustic, deep, safe" --lens inversion   # pick a creative lens
+bci invent snr_depth "aggressive" --backend fallback                        # force the fast rule-based proposer
+bci record in_vivo_readout "non-destructive"                                # grounded + saved to the DB
+```
+
+**The 10 topic IDs** (`bci topics` to list): `in_vivo_readout` · `multiplexed_reporters` ·
+`transsynaptic_pairing` · `neuron_delivery` · `snr_depth` · `scan_throughput` · `exabyte_assembly`
+· `twin_sim_scale` · `behavioral_verification` · `human_safety`.
+
+**The 10 lenses:** `analogical · inversion · crossDomain · extreme · historical · biomimicry ·
+combinatorial · reduction · scaling · future`. See also **`50 invention prompts to try.txt`**.
+
+---
+
 ## 5. Use it from Python
 
 ```python

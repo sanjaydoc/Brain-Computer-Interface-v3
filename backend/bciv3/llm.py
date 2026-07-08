@@ -4,7 +4,7 @@
 **Local-first**, per the v3 setup: providers are tried in this order for ``backend="auto"``:
   1. **local**   — any OpenAI-compatible server (Ollama / vLLM / llama.cpp / LM Studio) hosting
                    your Qwen 7B. Set ``LOCAL_LLM_URL`` (e.g. http://localhost:11434/v1) and
-                   ``LOCAL_LLM_MODEL`` (e.g. qwen2.5:7b-instruct). This is the default path.
+                   ``LOCAL_LLM_MODEL`` (e.g. qwen2.5:7b). This is the default path.
   2. **nvidia**  — NVIDIA NIM (OpenAI-compatible). Set ``NVIDIA_API_KEY`` (or ``NGC_API_KEY``).
   3. **openai** / **anthropic** / **openrouter** — cloud fallbacks via their keys.
 
@@ -92,7 +92,7 @@ def invoke_json(prompt: str, max_tokens: int = 2000, timeout: float = 120.0) -> 
     p = provider()
     if p == "local":
         return _chat(os.environ["LOCAL_LLM_URL"], os.environ.get("LOCAL_LLM_KEY"),
-                     os.environ.get("LOCAL_LLM_MODEL", "qwen2.5:7b-instruct"), prompt, max_tokens, timeout)
+                     os.environ.get("LOCAL_LLM_MODEL", "qwen2.5:7b"), prompt, max_tokens, timeout)
     if p == "nvidia":
         key = os.environ.get("NVIDIA_API_KEY") or os.environ["NGC_API_KEY"]
         return _chat(NVIDIA_BASE, key, os.environ.get("BCI_LLM_MODEL", "qwen/qwen2.5-7b-instruct"),

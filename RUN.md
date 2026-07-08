@@ -173,15 +173,15 @@ produces more physically-admissible, higher-scoring designs. No code change.
 **Linux / macOS**
 ```bash
 # a faster, lighter baseline:
-LOCAL_LLM_MODEL=qwen2.5:7b-instruct bci invent multiplexed_reporters "acoustic, deep, safe"
+LOCAL_LLM_MODEL=qwen2.5:7b bci invent multiplexed_reporters "acoustic, deep, safe"
 # a newer, larger model:
-LOCAL_LLM_MODEL=qwen3.5:9b          bci invent multiplexed_reporters "acoustic, deep, safe"
+LOCAL_LLM_MODEL=qwen3.5:9b bci invent multiplexed_reporters "acoustic, deep, safe"
 ```
 
 **Windows (PowerShell)** — set, run, repeat:
 ```powershell
-$env:LOCAL_LLM_MODEL = "qwen2.5:7b-instruct"; bci invent multiplexed_reporters "acoustic, deep, safe"
-$env:LOCAL_LLM_MODEL = "qwen3.5:9b";          bci invent multiplexed_reporters "acoustic, deep, safe"
+$env:LOCAL_LLM_MODEL = "qwen2.5:7b"; bci invent multiplexed_reporters "acoustic, deep, safe"
+$env:LOCAL_LLM_MODEL = "qwen3.5:9b"; bci invent multiplexed_reporters "acoustic, deep, safe"
 ```
 
 Compare the `passed`, `score`, and `limiting` fields across the 10 topics. Whichever yields more

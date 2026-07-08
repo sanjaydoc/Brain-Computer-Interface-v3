@@ -141,8 +141,8 @@ print(bciv3.report("multiplexed_reporters", cand))      # design + verdict + lim
 simulator decide which invents better (more passes / higher scores):
 
 ```bash
-LOCAL_LLM_MODEL=qwen2.5:7b-instruct bci invent multiplexed_reporters "acoustic, deep, safe"
-LOCAL_LLM_MODEL=qwen3.5:9b          bci invent multiplexed_reporters "acoustic, deep, safe"
+LOCAL_LLM_MODEL=qwen2.5:7b bci invent multiplexed_reporters "acoustic, deep, safe"
+LOCAL_LLM_MODEL=qwen3.5:9b bci invent multiplexed_reporters "acoustic, deep, safe"
 # Windows: $env:LOCAL_LLM_MODEL="qwen3.5:9b"; bci invent multiplexed_reporters "acoustic, deep, safe"
 ```
 

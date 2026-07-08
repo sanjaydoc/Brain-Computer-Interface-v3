@@ -5,10 +5,15 @@
 #
 # No need to cd into backend or activate the venv — this finds the venv for you.
 
-$py = Join-Path $PSScriptRoot 'backend\.venv\Scripts\python.exe'
-if (-not (Test-Path $py)) {
-  Write-Host "venv not found. First-time setup:" -ForegroundColor Yellow
-  Write-Host "  cd backend; python -m venv .venv; .\.venv\Scripts\Activate.ps1; pip install -e `".[dev,plot,api,db]`""
+# Look for the venv at the repo root (.venv) first, then backend\.venv — either layout works.
+$py = $null
+foreach ($cand in @('.venv\Scripts\python.exe', 'backend\.venv\Scripts\python.exe')) {
+  $p = Join-Path $PSScriptRoot $cand
+  if (Test-Path $p) { $py = $p; break }
+}
+if (-not $py) {
+  Write-Host "venv not found. First-time setup (from the repo root):" -ForegroundColor Yellow
+  Write-Host "  python -m venv .venv; .\.venv\Scripts\Activate.ps1; pip install -e `"backend[api,db]`""
   exit 1
 }
 & $py -m bciv3.cli serve @args

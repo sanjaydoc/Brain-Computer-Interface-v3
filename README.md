@@ -159,7 +159,10 @@ reduction · scaling · future`
 Requires **Python 3.10+** and **git**. (Optional: a local **Ollama + Qwen** for real invention,
 and **MongoDB** for storage — both auto-detected, both have graceful fallbacks.)
 
-### 1 · Get the code, then set up in **`backend/`**
+### 1 · Get the code, then set up at the **repo root**
+
+Create the venv at the **repo root** (one venv for the whole project) and install the backend as an
+editable package.
 
 **Windows (PowerShell)**
 ```powershell
@@ -168,12 +171,11 @@ git clone https://github.com/sanjaydoc/Brain-Computer-Interface-v3.git
 cd Brain-Computer-Interface-v3
 # already cloned — update instead:  cd Brain-Computer-Interface-v3 ; git pull origin main
 
-cd backend                                        # ← setup runs here
+# from the repo root:
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned   # one-time, allows venv activate
-python -m venv .venv                              # create the venv
+python -m venv .venv                              # create the venv (at the repo root)
 .\.venv\Scripts\Activate.ps1                      # ACTIVATE (prompt shows (.venv))
-pip install -e ".[dev,plot,api,db]"               # install dependencies
-python -m pytest -q                               # verify → 29 passed
+pip install -e "backend[api,db]"                  # install: api = cockpit server, db = MongoDB driver
 ```
 
 **macOS / Linux (bash / zsh)**
@@ -183,12 +185,15 @@ git clone https://github.com/sanjaydoc/Brain-Computer-Interface-v3.git
 cd Brain-Computer-Interface-v3
 # already cloned — update instead:  cd Brain-Computer-Interface-v3 && git pull origin main
 
-cd backend                                        # ← setup runs here
-python3 -m venv .venv                             # create the venv
+# from the repo root:
+python3 -m venv .venv                             # create the venv (at the repo root)
 source .venv/bin/activate                         # ACTIVATE (prompt shows (.venv))
-pip install -e ".[dev,plot,api,db]"               # install dependencies
-python -m pytest -q                               # verify → 29 passed
+pip install -e "backend[api,db]"                  # install: api = cockpit server, db = MongoDB driver
 ```
+
+> **Extras:** `api` (cockpit server) and `db` (MongoDB driver) are all you need to run. To also run
+> the tests and the matplotlib scorecard, add `dev,plot`:
+> `pip install -e "backend[dev,plot,api,db]"`, then verify with `python -m pytest backend -q` → **29 passed**.
 
 ### 2 · Run the app — from the **repo root** (no `cd`, no activation)
 
@@ -207,11 +212,11 @@ The launchers find the venv for you (flags pass through: `.\serve.ps1 --port 900
 
 ```powershell
 # Windows — from the repo root:
-.\backend\.venv\Scripts\Activate.ps1
+.\.venv\Scripts\Activate.ps1
 ```
 ```bash
 # macOS / Linux — from the repo root:
-source backend/.venv/bin/activate
+source .venv/bin/activate
 ```
 
 With the venv active (your prompt shows `(.venv)`), these work from **any directory**:

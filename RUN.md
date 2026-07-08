@@ -7,9 +7,9 @@ Only dependency for the core is **Python 3.10+**. `matplotlib` is optional (for 
 
 | Command | Where | Notes |
 |---|---|---|
-| `python -m venv` / `pip install -e …` | **`backend/`** | one-time setup |
+| `python -m venv .venv` / `pip install -e "backend[…]"` | **repo root** | one-time setup |
 | `.\serve.ps1` · `./serve.sh` | **repo root** | no venv activation needed |
-| `bci serve` · `bci invent` · `bci bench` · `bci db` … | **any dir**, venv **active** | activate once: `source backend/.venv/bin/activate` (or `.\backend\.venv\Scripts\Activate.ps1`) |
+| `bci serve` · `bci invent` · `bci bench` · `bci db` … | **any dir**, venv **active** | activate once: `source .venv/bin/activate` (or `.\.venv\Scripts\Activate.ps1`) |
 
 > Once the venv is active (prompt shows `(.venv)`), every `bci …` command works from any folder.
 
@@ -46,59 +46,62 @@ git pull origin main
 
 ## 2. Create the venv, activate it, install dependencies
 
-Do this in the **`backend/`** folder. The virtual environment (`.venv`) keeps this project's
-packages isolated from your system Python.
+Do this at the **repo root** (the `Brain-Computer-Interface-v3` folder). One virtual environment
+(`.venv`) for the whole project keeps its packages isolated from your system Python; the backend is
+installed as an editable package, so `bci …` works from any folder once the venv is active.
+
+> **Which extras?** `api` (cockpit server) + `db` (MongoDB driver) are all you need to run. Add
+> `dev,plot` only if you want to run the tests (`dev` = pytest) and the matplotlib scorecard (`plot`).
 
 ### Windows (PowerShell)
 
 ```powershell
-cd backend
+# stay at the repo root (do NOT cd into backend)
 
 # (one-time only) allow the venv's activate script to run:
 Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned
 
-# 1) create the venv
+# 1) create the venv (at the repo root)
 python -m venv .venv
 
 # 2) ACTIVATE it — your prompt then shows (.venv)
 .\.venv\Scripts\Activate.ps1
 
-# 3) install dependencies (everything: tests, plot, API, database)
-pip install -e ".[dev,plot,api,db]"
+# 3) install — to run the app:
+pip install -e "backend[api,db]"
+#    …or the full set (adds tests + plotting):  pip install -e "backend[dev,plot,api,db]"
 
-# 4) verify
-python -m pytest -q               # expect: 29 passed
+# 4) (optional, needs [dev]) verify
+python -m pytest backend -q       # expect: 29 passed
 ```
 
 ### macOS (bash / zsh)
 
 ```bash
-cd backend
-
-python3 -m venv .venv             # 1) create
+# stay at the repo root (do NOT cd into backend)
+python3 -m venv .venv             # 1) create (at the repo root)
 source .venv/bin/activate         # 2) ACTIVATE — prompt shows (.venv)
-pip install -e ".[dev,plot,api,db]"   # 3) install
-python -m pytest -q               # 4) verify → 29 passed
+pip install -e "backend[api,db]"  # 3) install (add dev,plot for tests + plotting)
+python -m pytest backend -q       # 4) (optional, needs [dev]) verify → 29 passed
 ```
 
 ### Linux (bash)
 
 ```bash
-cd backend
-
-python3 -m venv .venv             # 1) create
+# stay at the repo root (do NOT cd into backend)
+python3 -m venv .venv             # 1) create (at the repo root)
 source .venv/bin/activate         # 2) ACTIVATE — prompt shows (.venv)
-pip install -e ".[dev,plot,api,db]"   # 3) install
-python -m pytest -q               # 4) verify → 29 passed
+pip install -e "backend[api,db]"  # 3) install (add dev,plot for tests + plotting)
+python -m pytest backend -q       # 4) (optional, needs [dev]) verify → 29 passed
 ```
 
 **Re-activating later** (each new terminal): from the repo root, run
-`.\backend\.venv\Scripts\Activate.ps1` (Windows) or `source backend/.venv/bin/activate`
-(macOS/Linux). To leave the venv: `deactivate`.
+`.\.venv\Scripts\Activate.ps1` (Windows) or `source .venv/bin/activate` (macOS/Linux).
+To leave the venv: `deactivate`.
 
-Optional sanity check — invents + grades all 10 topics and writes a scorecard graph:
+Optional sanity check (needs `[plot]`) — invents + grades all 10 topics and writes a scorecard graph:
 ```bash
-python scripts/demo_invent.py --plot      # (Windows: python scripts\demo_invent.py --plot)
+python backend/scripts/demo_invent.py --plot   # (Windows: python backend\scripts\demo_invent.py --plot)
 ```
 
 ---
@@ -347,7 +350,7 @@ MONGODB_DB=bciv3
 2. Install the driver and run:
 
 ```bash
-pip install -e ".[db]"          # pymongo
+pip install -e "backend[db]"    # pymongo (from the repo root, venv active)
 bci record multiplexed_reporters "acoustic, deep, safe"   # invent + detail + score → saved
 bci db --stats                  # counts + pass-rate per category
 bci db multiplexed_reporters    # list saved inventions in one category
@@ -490,8 +493,8 @@ print(bciv3.LENSES)               # the 10 invention lenses
 ## 6. Updating later
 
 ```bash
-git pull origin main
-cd backend && pip install -e ".[dev,plot,api,db]"
+git pull origin main                       # from the repo root
+pip install -e "backend[api,db]"           # only needed if dependencies changed (safe to re-run)
 ```
 
 ---
@@ -508,7 +511,7 @@ cd backend && pip install -e ".[dev,plot,api,db]"
 | `note: llm failed (timed out after Ns)` | model too slow for the token budget | smaller model + raise `BCI_LLM_TIMEOUT` |
 | `ping` JSON-mode hangs but plain is OK | Ollama's JSON-grammar mode stalls | `BCI_LLM_JSON_MODE=off` in `.env` |
 | `HTTP 500 … 0xc0000005` from Ollama | Ollama's runner crashed (often after an out-of-memory) | restart Ollama (below) |
-| `engine: … → jsonl` instead of MongoDB | `pymongo` missing or Mongo down | `pip install -e ".[db]"`, set `MONGODB_URI`, start `mongod` |
+| `engine: … → jsonl` instead of MongoDB | `pymongo` missing or Mongo down | `pip install -e "backend[db]"`, set `MONGODB_URI`, start `mongod` |
 
 **A shell variable is overriding `.env`.** Environment variables set in the shell win over the
 `.env` file *for the whole session*. If `bci ping` shows a model you thought you changed, clear the

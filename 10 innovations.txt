@@ -1,0 +1,65 @@
+THE 10 INNOVATIONS — what must be invented, and why (clean text)
+
+Legend: each entry = the innovation needed, what exists today, and why it is the blocker.
+
+------------------------------------------------------------------------------
+
+1. In-vivo, non-destructive barcode readout
+   Today: readout ends in sequencing (destructive, kills the tissue) or surface optics
+          (blind below the cortex).
+   Why:   Door #1. You cannot upload a living person by slicing their brain. Without reading
+          molecular barcodes deep and alive, nothing else matters.
+
+2. Massively-multiplexed reporters (thousands of distinguishable channels per voxel)
+   Today: about 3 to 8 distinguishable channels (gas-vesicle collapse pressures, MRI
+          relaxation bins).
+   Why:   A deep voxel holds around 1,000,000 synapses. Sensors cannot resolve them by
+          position (the physics wall) — only by identity. The capacity law says a human fUS
+          voxel needs about 46 bits (roughly 7e13 codewords). This is the multiplexing wall.
+
+3. Trans-synaptic pairing at scale and fidelity (SYNseq-class)
+   Today: early, noisy, high false-pair rate, small scale.
+   Why:   Barcodes label neurons (the nodes). To recover the wiring you must read which
+          barcode pairs with which across each synapse (the edges), at 1e14 synapses with low
+          error. Without it you have a parts list, not a circuit.
+
+4. About 100 percent neuron delivery (BBB-crossing vector)
+   Today: AAV-PHP.eB crosses the blood-brain barrier and transduces many neurons in mice, but
+          not all, and not proven in humans.
+   Why:   Any unlabeled neuron is a coverage gap, which is a blind spot. "Most neurons" is not
+          a complete connectome.
+
+5. Signal-boost and noise reduction at depth (SNR)
+   Today: fUS and MRI reach deep; reporters are faint; the skull aberrates the beam.
+   Why:   Sets how deep you can read before the signal drowns, which creates blind spots
+          (Layer A). Mostly won by brighter, more specific reporters (molecular) plus
+          skull-aberration correction, not a bigger scanner.
+
+6. Whole-brain scan throughput and time
+   Today: per-voxel dwell plus averaging.
+   Why:   Cutting noise means averaging longer, but 1e14 synapses times exabytes makes total
+          scan time its own wall. Needs parallel readout and faster schemes.
+
+7. Exabyte-scale assembly and error-correction
+   Today: works at mouse-scale projectomes.
+   Why:   Turning noisy reads back into a graph at human scale is a data and algorithms problem
+          (consensus, GNN gap-fill, confidence) — exabytes, not gigabytes.
+
+8. Whole-brain twin simulation
+   Today: runs worm to mouse; v1 simulates connectomes.
+   Why:   The recovered map only counts if you can run it. Scaling the twin to 86 billion
+          neurons and 1e14 synapses is its own compute frontier.
+
+9. Behavioural upload-verification protocol
+   Today: v2 scores worm behavioural fidelity in simulation.
+   Why:   You must prove the twin behaves like the original, not just that edges overlap, and
+          define what "successfully uploaded a person" even means.
+
+10. Human safety of the whole chain
+    Today: AAV and FUS-BBB-opening tested in limited human trials.
+    Why:   Delivery, reporter expression, and wave exposure must be reversible and safe in a
+           living human before any of this is ethical.
+
+------------------------------------------------------------------------------
+Layer tags: 1 bio+hw, 2 bio, 3 bio, 4 bio, 5 hw+bio, 6 hw, 7 sw+brain-template,
+8 sw+virtual-env, 9 virtual-env, 10 bio+hw.  7 of 10 touch biomolecules.

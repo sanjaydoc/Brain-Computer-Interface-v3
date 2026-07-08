@@ -1,0 +1,50 @@
+10 INVENTION PROMPTS TO TRY — BCI v3 cockpit
+Paste one into the cockpit "prompt" box, pick the matching topic, choose a lens, and hit
+Invent + Simulate. Add the word "aggressive" to push the parameters harder.
+
+------------------------------------------------------------------------------
+
+1. Topic: In-vivo, non-destructive barcode readout   (lens: biomimicry)
+   Prompt: Read molecular barcodes 75 mm deep in a living brain without harming tissue.
+   Use focused ultrasound with gas-vesicle reporters; keep intensity and mechanical index
+   well under the safety limits while pushing penetration.
+
+2. Topic: Massively-multiplexed reporters   (lens: combinatorial)
+   Prompt: Design reporters that give a human fUS voxel enough distinguishable channels to
+   tell a million synapses apart by identity, not position. Maximize barcode bits.
+
+3. Topic: Trans-synaptic pairing at scale + fidelity   (lens: analogical)
+   Prompt: Pair pre and post barcodes across every synapse with low false-pair rate. Add
+   sequencing depth so consensus removes one-off errors and edge F1 stays above 0.9.
+
+4. Topic: 100 percent neuron delivery   (lens: cross-domain)
+   Prompt: Reach essentially every neuron with a BBB-crossing vector so there are no coverage
+   blind spots, while keeping the viral dose safely below the toxicity ceiling.
+
+5. Topic: Signal boost and noise cut at depth (SNR)   (lens: inversion)
+   Prompt: Instead of a bigger scanner, raise the signal with brighter reporters and cut noise
+   with heavy averaging so the read still works at 75 mm depth. Aggressive.
+
+6. Topic: Whole-brain scan throughput   (lens: scaling)
+   Prompt: Read the whole brain in under 30 days by massively parallel readout channels and
+   short per-voxel dwell time. Trade dwell for parallelism. Aggressive.
+
+7. Topic: Exabyte-scale assembly and error-correction   (lens: reduction)
+   Prompt: Assemble a human connectome from noisy reads within a few exabytes of storage,
+   using strong consensus so residual assembly error stays under 5 percent.
+
+8. Topic: Whole-brain twin simulation   (lens: future)
+   Prompt: Run an 86-billion-neuron twin at real time. Assume zettascale compute and lean
+   per-synapse update kernels; hit a real-time factor of at least one.
+
+9. Topic: Behavioural upload-verification   (lens: extreme)
+   Prompt: Prove the recovered brain behaves like the original with a rich stimulus battery
+   and a sensitive divergence metric, targeting behavioural fidelity above 0.9.
+
+10. Topic: Human safety of the whole chain   (lens: historical)
+    Prompt: Keep the entire pipeline inside every known safety limit — ultrasound intensity,
+    mechanical index, and viral dose — with generous headroom. Learn from past adverse events.
+
+------------------------------------------------------------------------------
+Tip: the browser cockpit uses the deterministic proposer; run "bci serve" and wire a local
+LLM (Qwen) to have the prompt and lens actually steer a real, creative invention.

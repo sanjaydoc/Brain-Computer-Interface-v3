@@ -267,22 +267,67 @@ async function loadGroups() {
   return { groups, store: 'browser (localStorage)' };
 }
 
+const savedById = {};       // id → full record, for the click-to-read detail view
+
 async function renderSaved() {
   const { groups, store } = await loadGroups();
   $('saved-store').textContent = 'store: ' + store;
   const box = $('saved-groups');
+  Object.keys(savedById).forEach((k) => delete savedById[k]);
   box.innerHTML = TOPIC_IDS.map((tid, i) => {
     const rows = groups[tid] || [];
+    rows.forEach((r) => { savedById[r.id] = r; });
     const inner = rows.length ? rows.map((r) =>
-      `<div class="inv-row"><span class="dot ${r.score.passed ? 'p' : 'f'}"></span>` +
+      `<div class="inv-row" data-id="${esc(r.id)}" title="click to read the full invention"><span class="dot ${r.score.passed ? 'p' : 'f'}"></span>` +
       `<span class="ti">${esc(r.title || TOPICS[tid].title)}</span>` +
       `<span class="sc">${(+r.score.score).toFixed(3)}</span>` +
       `<button class="del" data-id="${esc(r.id)}" title="delete">🗑</button></div>`).join('')
       : '<div class="cat-empty">no saved inventions yet</div>';
     return `<div class="cat"><h3>${i + 1}. ${esc(TOPICS[tid].title)} <span class="n">${rows.length}</span></h3>${inner}</div>`;
   }).join('');
-  box.querySelectorAll('.del').forEach((btn) => btn.addEventListener('click', () => deleteInv(btn.dataset.id)));
+  box.querySelectorAll('.del').forEach((btn) =>
+    btn.addEventListener('click', (e) => { e.stopPropagation(); deleteInv(btn.dataset.id); }));
+  box.querySelectorAll('.inv-row').forEach((row) =>
+    row.addEventListener('click', () => openInvDetail(savedById[row.dataset.id])));
 }
+
+function _list(title, arr) {
+  return (arr && arr.length) ? `<div class="id-sec"><h4>${title}</h4><ul>${arr.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></div>` : '';
+}
+
+function openInvDetail(rec) {
+  if (!rec) return;
+  const s = rec.score || {}, d = rec.detail || {};
+  const domains = ['biophysics', 'physics', 'electronics', 'biology'].filter((k) => d[k] && d[k] !== '—')
+    .map((k) => `<div class="id-domain"><span class="dl">${k}</span><span>${esc(d[k])}</span></div>`).join('');
+  const params = Object.entries(rec.params || {}).map(([k, v]) =>
+    `<span class="k">${esc(k)}</span><span class="v">${esc(typeof v === 'number' ? (+v).toLocaleString() : v)}</span>`).join('');
+  const parts = (rec.parts || []).map((p) => `<li><b>${esc(p.name)}</b> — ${esc(p.role)}</li>`).join('');
+  const cites = (rec.citations || []).map((c) =>
+    `<span class="id-cite"><span class="src">${esc(c.source)}</span><a href="${esc(c.url)}" target="_blank" rel="noopener">${esc(c.title)}</a></span>`).join('');
+  const via = rec.backend === 'llm' ? `${rec.provider || 'llm'} · lens ${rec.lens || '?'}` : rec.backend || '—';
+  $('invdetail-body').innerHTML =
+    `<div class="eyebrow">${esc(TOPIC_TITLE(rec.topic))}</div>` +
+    `<h2>${esc(rec.title || '')}</h2>` +
+    `<div class="id-meta"><span>${esc(rec.domain || '')}</span><span>via <b>${esc(via)}</b></span>` +
+    `<span>${s.passed ? 'PASS ✓' : 'FAIL ✗'} · score <b>${s.score}</b> · ${esc(s.fidelity || '')}</span>` +
+    `<span>limiting: ${esc(s.limiting || '')}</span>${rec.grounded ? '<span>🔎 grounded</span>' : ''}` +
+    `<span>${esc(String(rec.ts || '').slice(0, 19).replace('T', ' '))}</span></div>` +
+    (rec.prompt ? `<div class="id-sec"><h4>Prompt</h4><p>${esc(rec.prompt)}</p></div>` : '') +
+    (rec.mechanism ? `<div class="id-sec"><h4>Mechanism</h4><p>${esc(rec.mechanism)}</p></div>` : '') +
+    (domains ? `<div class="id-sec"><h4>Law simulator · biophysics · physics · electronics</h4>${domains}</div>` : '') +
+    (params ? `<div class="id-sec"><h4>Parameters</h4><div class="id-kv">${params}</div></div>` : '') +
+    _list('Materials', rec.materials) +
+    _list('Protocol steps', rec.protocol_steps) +
+    (parts ? `<div class="id-sec"><h4>Parts</h4><ul>${parts}</ul></div>` : '') +
+    _list('Assumptions', rec.assumptions) +
+    _list('Risks', rec.risks) +
+    (cites ? `<div class="id-sec"><h4>Grounded in literature (${rec.citations.length})</h4>${cites}</div>` : '');
+  $('invdetail').hidden = false;
+}
+
+$('close-invdetail').addEventListener('click', () => { $('invdetail').hidden = true; });
+$('invdetail').addEventListener('click', (e) => { if (e.target.id === 'invdetail') $('invdetail').hidden = true; });
 
 async function deleteInv(id) {
   if (apiUp && !String(id).startsWith('loc_')) {

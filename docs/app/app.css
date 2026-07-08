@@ -121,6 +121,22 @@ select:hover { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://ww
 .bench-run { font-size: .76rem; color: var(--ink-2); padding: .25rem 0; border-bottom: 1px dashed var(--hair); display: flex; justify-content: space-between; gap: 1rem; }
 .bench-run b { font-family: "JetBrains Mono", monospace; }
 
+/* clickable saved row + full invention detail view */
+.inv-row { cursor: pointer; } .inv-row:hover { border-color: var(--molecular); }
+.inv-row .ti { pointer-events: none; }
+.id-sec { margin: 1rem 0; } .id-sec h4 { font-family: var(--sans); font-weight: 700; font-size: .82rem; text-transform: uppercase; letter-spacing: .05em; color: var(--molecular); margin: 0 0 .3rem; }
+.id-sec p { margin: .1rem 0; font-size: .88rem; color: var(--ink-2); line-height: 1.5; }
+.id-sec ul { margin: .2rem 0; padding-left: 1.2rem; font-size: .86rem; color: var(--ink-2); }
+.id-meta { display: flex; flex-wrap: wrap; gap: .4rem .9rem; font-size: .78rem; color: var(--muted); margin: .2rem 0 .5rem; }
+.id-meta b { color: var(--ink); font-family: "JetBrains Mono", monospace; }
+.id-kv { display: grid; grid-template-columns: 1fr auto; gap: .3rem 1rem; font-family: "JetBrains Mono", monospace; font-size: .78rem; }
+.id-kv .k { color: var(--muted); } .id-kv .v { color: var(--ink); text-align: right; }
+.id-domain { display: grid; grid-template-columns: 90px 1fr; gap: .4rem; margin: .3rem 0; font-size: .86rem; }
+.id-domain .dl { font-size: .66rem; font-weight: 700; text-transform: uppercase; color: var(--molecular); padding-top: .15rem; }
+.id-cite { display: block; font-size: .8rem; padding: .2rem 0; }
+.id-cite .src { font-size: .62rem; font-weight: 700; text-transform: uppercase; color: #fff; background: var(--scanner); border-radius: 4px; padding: 1px 5px; margin-right: .35rem; }
+.id-cite a { color: var(--template); text-decoration: none; } .id-cite a:hover { text-decoration: underline; }
+
 @media (max-width: 860px) {
   .stage { grid-template-columns: 1fr; height: auto; }
   .viewer { height: 60vh; } .aside { border-left: 0; border-top: 1px solid var(--hair); }

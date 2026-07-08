@@ -23,8 +23,8 @@
         bci <span class="muted">v3 · invention cockpit</span>
       </a>
       <div class="nav-links">
-        <button class="nav-btn" id="open-bench">📊 Benchmark</button>
-        <button class="nav-btn" id="open-saved">📚 Saved inventions</button>
+        <button class="nav-btn" id="open-bench" title="Sweep all 10 topics N times, grade every attempt, and rank pass-rate + mean score — a model leaderboard. Run it per model to A-B them. Saved to the DB.">📊 Benchmark</button>
+        <button class="nav-btn" id="open-saved" title="Browse every invention auto-saved to the database, grouped by the 10 innovation categories. Click one to read its full design; 🗑 to delete.">📚 Saved inventions</button>
         <span class="muted small">invention proposes · only physics moves the score</span>
       </div>
     </div>
@@ -55,7 +55,15 @@
       <div class="eyebrow">Database</div>
       <h2>Saved inventions</h2>
       <div class="mono small muted" id="saved-store"></div>
+      <p class="muted small">Click any invention to read its full design.</p>
       <div id="saved-groups"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="invdetail" hidden>
+    <div class="modal-card">
+      <button class="modal-close" id="close-invdetail" title="close">✕</button>
+      <div id="invdetail-body"></div>
     </div>
   </div>
 
@@ -72,15 +80,15 @@
         <select id="lens"></select>
         <label class="fld" for="prompt">prompt</label>
         <input class="txt" id="prompt" placeholder="e.g. acoustic reporters, deep, safe, aggressive" />
-        <label class="chk"><input type="checkbox" id="ground" checked /> ground in literature (PubMed · arXiv · USPTO · Wikipedia …)</label>
-        <button class="btn" id="invent">✨ Invent + Simulate</button>
+        <label class="chk" title="Before inventing, search PubMed / arXiv / USPTO / PubChem / GitHub / SearXNG / Wikipedia and feed the results to the model, so the design is grounded in real prior art. Adds a few seconds; the citations are shown and saved. Uncheck for faster runs."><input type="checkbox" id="ground" checked /> ground in literature (PubMed · arXiv · USPTO · Wikipedia …)</label>
+        <button class="btn" id="invent" title="Invent one design for the selected topic + lens + prompt, then grade it with the biophysics / physics / electronics simulator and auto-save it to the database.">✨ Invent + Simulate</button>
         <div class="mono small" id="invent-status" style="min-height:1.1em; color:var(--molecular); margin-top:.25rem"></div>
-        <label class="fld">lens tournament — how many lenses</label>
-        <div class="seg" id="lensn">
+        <label class="fld" title="How many of the 10 creative lenses the tournament runs.">lens tournament — how many lenses</label>
+        <div class="seg" id="lensn" title="How many creative lenses the tournament runs (3, 5, or all 10).">
           <button data-n="3">3</button><button data-n="5" class="on">5</button><button data-n="10">10</button>
         </div>
-        <button class="btn ghost" id="tournament">🏆 Run lens tournament</button>
-        <button class="btn ghost" id="all">grade all 10 topics</button>
+        <button class="btn ghost" id="tournament" title="Invent the SELECTED topic through several creative lenses at once (3/5/10 above) and rank them by simulator score — shows which lens produces the best design. Real diversity needs the LLM backend.">🏆 Run lens tournament</button>
+        <button class="btn ghost" id="all" title="Run the engine once for EACH of the 10 topics and fill the scorecard chart — a quick at-a-glance sweep (1 sample per topic, not saved). For a rigorous, averaged, saved leaderboard use 📊 Benchmark.">grade all 10 topics</button>
         <div class="statrow" style="margin-top:.5rem"><span>engine</span><b id="backend">rule-based (browser)</b></div>
         <div class="stim-note small muted" style="margin-top:.3rem">Wire a local LLM (Qwen) via the Python backend — see RUN.md. The browser cockpit uses the deterministic proposer.</div>
       </div>

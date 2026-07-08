@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BCI v3 — invention cockpit</title>
+  <meta name="description" content="Invent a design for one of the 10 brain-mapping blockers, then let the law simulator grade it live." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="../assets/theme.css" />
+  <link rel="stylesheet" href="app.css" />
+</head>
+<body>
+  <nav class="nav">
+    <div class="wrap">
+      <a class="brand" href="#">
+        <svg viewBox="0 0 32 32" fill="none" aria-hidden="true">
+          <circle cx="9" cy="16" r="3" fill="currentColor"/><circle cx="23" cy="9" r="2.4" fill="currentColor"/>
+          <circle cx="24" cy="22" r="2.4" fill="currentColor"/>
+          <path d="M11.6 14.7 20.8 9.8M11.7 17.2 21.7 21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        bci <span class="muted">v3 · invention cockpit</span>
+      </a>
+      <div class="nav-links"><span class="muted small">invention proposes · only physics moves the score</span></div>
+    </div>
+  </nav>
+
+  <main class="stage">
+    <div class="viewer">
+      <canvas id="chart"></canvas>
+
+      <div class="overlay controls">
+        <div class="eyebrow">Invention engine</div>
+        <h3>Invent a solution</h3>
+        <label class="fld" for="topic">innovation topic</label>
+        <select id="topic"></select>
+        <label class="fld" for="lens">creative lens</label>
+        <select id="lens"></select>
+        <label class="fld" for="prompt">prompt</label>
+        <input class="txt" id="prompt" placeholder="e.g. acoustic reporters, deep, safe, aggressive" />
+        <button class="btn" id="invent">✨ Invent + Simulate</button>
+        <button class="btn ghost" id="all">grade all 10 topics</button>
+        <div class="statrow" style="margin-top:.5rem"><span>engine</span><b id="backend">rule-based (browser)</b></div>
+        <div class="stim-note small muted" style="margin-top:.3rem">Wire a local LLM (Qwen) via the Python backend — see RUN.md. The browser cockpit uses the deterministic proposer.</div>
+      </div>
+
+      <div class="overlay verdict">
+        <div class="eyebrow">Simulator verdict</div>
+        <h3 id="v-title">—</h3>
+        <div style="margin-bottom:.4rem"><span class="pill" id="v-pass">—</span> <span class="fid" id="v-fid">—</span></div>
+        <div class="statrow"><span>score</span><b id="v-score">—</b></div>
+        <div class="statrow"><span>limiting factor</span><b id="v-limit" style="text-align:right">—</b></div>
+        <div class="tags" id="v-tags"></div>
+        <hr class="divider" />
+        <div class="eyebrow">Metrics</div>
+        <div id="v-metrics" class="mono muted">run an invention →</div>
+      </div>
+    </div>
+
+    <aside class="aside">
+      <div class="eyebrow">Candidate design</div>
+      <h4 id="c-title">—</h4>
+      <div class="mono muted small" id="c-domain"></div>
+      <hr class="divider" />
+      <div class="eyebrow">Proposed parameters</div>
+      <div id="c-params"></div>
+      <div class="eyebrow" style="margin-top:.7rem">Assumptions</div>
+      <ul class="list" id="c-assume"><li class="muted">—</li></ul>
+      <div class="eyebrow">Risks</div>
+      <ul class="list" id="c-risks"><li class="muted">—</li></ul>
+    </aside>
+  </main>
+
+  <script type="module" src="js/viewer.js"></script>
+</body>
+</html>

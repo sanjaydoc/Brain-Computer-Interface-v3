@@ -27,11 +27,18 @@ _Author: **Dr. Sanjay Anbu**_
 
 ---
 
+![The invention cockpit — v1's theme + cockpit view](docs/media/cockpit.png)
+
+> **The cockpit** (`docs/app/`) — v1's theme and floating-card cockpit view. Pick a topic + a
+> creative lens + a prompt, hit **Invent + Simulate**, and the law simulator grades the design
+> live: the verdict card (pass/fail + limiting number + metrics), the candidate design aside
+> (proposed parameters + assumptions + risks), and the scorecard for all 10 topics.
+
 ![Invented designs graded by the law simulator](docs/media/scorecard.png)
 
-> Every one of the 10 blockers, invented and then graded. Green = the proposed design is
-> **physically admissible in-model**; the right-hand tag is the **fidelity** of that verdict
-> (`full-sim` = fully modelled; `physics-only` / `estimate` / `limits-only` = honestly partial).
+> The same run as a static graph. Green = the proposed design is **physically admissible
+> in-model**; the right-hand tag is the **fidelity** of that verdict (`full-sim` = fully modelled;
+> `physics-only` / `estimate` / `limits-only` = honestly partial).
 
 ---
 
@@ -45,7 +52,7 @@ _Author: **Dr. Sanjay Anbu**_
 - ✅ **Candidate ranking** — one design per lens, ordered by simulated score (an idea tournament).
 - ✅ **Honest fidelity flags** — a pass means *physically admissible*, never *proven in a living brain*.
 - ✅ **13 tests, deterministic** — the whole pipeline runs offline in CI.
-- ⬜ **Cockpit GUI** — pick a topic, watch the engine propose + the simulator score, live (Phase 3).
+- ✅ **Cockpit GUI** — v1's theme + cockpit view; pick a topic, invent, and watch the law simulator grade it live in the browser.
 - ⬜ **Amber topics as full estimators** — richer models for assembly / twin-sim at scale (Phase 4).
 
 ---

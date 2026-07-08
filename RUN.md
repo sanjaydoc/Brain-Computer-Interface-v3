@@ -61,24 +61,28 @@ The engine runs fully **without** an LLM (deterministic rule-based fallback). To
 ### Example: Ollama + Qwen
 
 ```bash
-# install Ollama, then:
-ollama pull qwen2.5:7b-instruct
-ollama serve                      # serves an OpenAI-compatible API on :11434
+# install Ollama, then pull the model you're using (e.g. Qwen 3.5 9B):
+ollama pull qwen3.5:9b            # use whatever tag `ollama list` shows
+ollama serve                     # serves an OpenAI-compatible API on :11434
 ```
 
-Set the environment variables (the adapter is **local-first**):
+Set the environment variables (the adapter is **local-first**); `LOCAL_LLM_MODEL` is just the
+Ollama tag, so point it at your downloaded model:
 
 **Windows (PowerShell)**
 ```powershell
 $env:LOCAL_LLM_URL   = "http://localhost:11434/v1"
-$env:LOCAL_LLM_MODEL = "qwen2.5:7b-instruct"
+$env:LOCAL_LLM_MODEL = "qwen3.5:9b"
 ```
 
 **Linux / macOS**
 ```bash
 export LOCAL_LLM_URL="http://localhost:11434/v1"
-export LOCAL_LLM_MODEL="qwen2.5:7b-instruct"
+export LOCAL_LLM_MODEL="qwen3.5:9b"
 ```
+
+> Any OpenAI-compatible model works — the adapter doesn't hard-code Qwen. Confirm the exact tag
+> with `ollama list` after the download finishes, and use that string for `LOCAL_LLM_MODEL`.
 
 Then any `invent(...)` / `design(...)` call uses Qwen automatically.
 

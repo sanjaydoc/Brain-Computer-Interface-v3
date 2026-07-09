@@ -31,11 +31,6 @@ _Author: **Dr. Sanjay Anbu**_
 
 ---
 
-> ⚠️ **Private & proprietary.** Confidential work in progress. All rights reserved — not licensed
-> for public use, reproduction, or redistribution.
-
----
-
 ![The invention cockpit — v1's theme + cockpit view](docs/media/cockpit.png)
 
 > **The cockpit** (`docs/app/`) — v1's theme and floating-card cockpit view. Pick a topic + a

@@ -40,10 +40,24 @@ CONSTRAINTS = {
 }
 
 
+def _schema_hint(inv: Innovation) -> str:
+    """Render the param schema by TYPE so the model fills strings with strings — e.g. readout_tech is
+    a technology NAME (acoustic_collapse), not a number. Getting this wrong was silently failing runs."""
+    parts = []
+    for k, v in inv.param_schema.items():
+        if isinstance(v, bool):
+            parts.append(f'"{k}": <true|false>')
+        elif isinstance(v, str):
+            parts.append(f'"{k}": "<string, e.g. {v}>"')
+        else:
+            parts.append(f'"{k}": <number>')
+    return ", ".join(parts)
+
+
 def build_invent_prompt(inv: Innovation, user_prompt: str, lens: str, context: str = "",
                         constraint: str | None = None) -> str:
     directive = LENSES.get(lens, LENSES[DEFAULT_LENS])
-    schema = ", ".join(f'"{k}": <number>' for k in inv.param_schema)
+    schema = _schema_hint(inv)
     laws = ", ".join(inv.laws)
     grounding = f"\n\n{context}\nGround your design in the prior knowledge above where relevant.\n" if context else ""
     header, block = CONSTRAINTS.get((constraint or "").lower(), ("non-invasive brain-mapping", ""))
@@ -70,7 +84,7 @@ step-by-step protocol, and honest assumptions/risks. Output ONLY this JSON:
 
 def build_refine_prompt(inv: Innovation, prev: dict, score) -> str:
     """Second-round prompt: feed back the simulator's failure so the model repairs the design."""
-    schema = ", ".join(f'"{k}": <number>' for k in inv.param_schema)
+    schema = _schema_hint(inv)
     return f"""Your previous design for "{inv.title}" FAILED the physics simulator.
 LIMITING FACTOR: {score.limiting}
 MEASURED: {score.metrics}

@@ -27,6 +27,12 @@ def _sanitize_params(inv: Innovation, raw: dict) -> dict:
                 out[k] = float(v)
             except Exception:
                 out[k] = default
+    # enum guard: readout_tech must name a real readout technology, else the channel ceiling defaults
+    # to a tiny value and the run silently fails (models sometimes emit a number like "32").
+    if "readout_tech" in out:
+        from ..laws import electronics as E
+        if out["readout_tech"] not in E.CHANNEL_CEILING:
+            out["readout_tech"] = inv.param_schema.get("readout_tech", "acoustic_collapse")
     return out
 
 

@@ -544,6 +544,62 @@ function openPrototype(id) {
   $('synth-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
+// Build a clean, standalone printable document for one prototype and open the browser's
+// print dialog (→ "Save as PDF"). No external libraries — works offline under `bci serve`.
+function exportPrototypePdf(id) {
+  const p = protoById[id];
+  if (!p) return;
+  const s = p.system || {};
+  const when = esc(String(p.ts || '').slice(0, 19).replace('T', ' '));
+  const name = esc(s.system_name || 'End-to-End System');
+  const pipeline = (p.pipeline || []).map((ph) =>
+    `<div class="phase"><h3>${esc(ph.phase)} — ${esc(ph.why || '')}</h3><ul>` +
+    (ph.stages || []).map((st) => `<li><b>${esc(st.title)}</b> — ${esc(st.role || '')}</li>`).join('') +
+    `</ul></div>`).join('');
+  const how = (s.how_it_works || []).map((x) => `<li>${esc(x)}</li>`).join('');
+  const bom = (p.bill_of_materials || []).map((b) =>
+    `<tr><td>${esc(b.name || '')}</td><td>${esc(b.role || '')}</td><td>${esc(b.phase || '')}</td></tr>`).join('');
+  const safety = p.safety && p.safety.title
+    ? `<p><b>🛡 Safety envelope:</b> ${esc(p.safety.title)} — keeps ultrasound intensity, mechanical index, and viral dose within limits across the whole chain.</p>` : '';
+  const risks = (s.open_risks && s.open_risks.length)
+    ? `<h2>Open risks</h2><ul>${s.open_risks.map((r) => `<li>${esc(r)}</li>`).join('')}</ul>` : '';
+  const html = `<!doctype html><html><head><meta charset="utf-8"><title>${name} — BCI v3 prototype</title>
+<style>
+  @page { margin: 18mm; }
+  * { box-sizing: border-box; }
+  body { font: 12px/1.5 -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; color: #111; max-width: 760px; margin: 0 auto; padding: 1rem; }
+  h1 { font-size: 22px; margin: 0 0 .2rem; }
+  h2 { font-size: 15px; margin: 1.4rem 0 .4rem; border-bottom: 1px solid #ccc; padding-bottom: .2rem; }
+  h3 { font-size: 12.5px; margin: .7rem 0 .3rem; }
+  .meta { color: #666; font-family: ui-monospace, "JetBrains Mono", monospace; font-size: 11px; margin-bottom: .8rem; }
+  .over { font-size: 13px; color: #333; }
+  .phase { margin: .3rem 0; padding-left: .2rem; }
+  .phase ul { margin: .2rem 0 .2rem 1.1rem; padding: 0; }
+  li { margin: .12rem 0; }
+  ol { margin: .3rem 0 .3rem 1.2rem; padding: 0; }
+  table { border-collapse: collapse; width: 100%; font-size: 11px; margin-top: .3rem; }
+  td, th { border: 1px solid #ddd; padding: 3px 6px; text-align: left; vertical-align: top; }
+  th { background: #f3f3f3; }
+  .foot { margin-top: 1.6rem; color: #999; font-size: 10px; border-top: 1px solid #eee; padding-top: .5rem; }
+  @media print { body { padding: 0; } }
+</style></head><body>
+  <h1>${name}</h1>
+  <div class="meta">Brain-Computer-Interface v3 · prototype ${esc(String(p.id || '').slice(0, 12))} · ${when} · built via ${esc(s.engine || 'template')} · ${esc(String(p.total || ''))} blockers fused</div>
+  <p class="over">${esc(s.overview || '')}</p>
+  <h2>End-to-end pipeline</h2>${pipeline}
+  ${s.integration_notes ? `<p><b>Integration:</b> ${esc(s.integration_notes)}</p>` : ''}${safety}
+  <h2>How it works — end to end</h2><ol>${how}</ol>
+  <h2>Bill of materials (${(p.bill_of_materials || []).length} parts)</h2>
+  <table><thead><tr><th>Part</th><th>Role</th><th>Phase</th></tr></thead><tbody>${bom}</tbody></table>
+  ${risks}
+  <div class="foot">Generated from the BCI v3 cockpit · non-invasive brain-uploading system · every stage is a passing, law-simulated design.</div>
+  <script>window.onload=function(){setTimeout(function(){window.print();},250);};<\/script>
+</body></html>`;
+  const w = window.open('', '_blank');
+  if (!w) { alert('Pop-up blocked — allow pop-ups for this page to download the PDF.'); return; }
+  w.document.open(); w.document.write(html); w.document.close();
+}
+
 async function loadSynthHistory() {
   const box = $('synth-history');
   if (!box || !apiUp) { if (box) box.innerHTML = '<div class="muted small">—</div>'; return; }
@@ -555,11 +611,14 @@ async function loadSynthHistory() {
     box.innerHTML = rows.length ? rows.map((p) => {
       const sysd = p.system || {};
       return `<div class="bench-run proto-row" data-id="${esc(p.id || '')}">` +
-             `<span>${esc(String(p.ts || '').slice(0, 19).replace('T', ' '))} · ${esc(sysd.system_name || 'system')}</span>` +
-             `<span>${(p.bill_of_materials || []).length} parts · ${esc(sysd.engine || '')} · view →</span></div>`;
+             `<span class="pname">${esc(String(p.ts || '').slice(0, 19).replace('T', ' '))} · ${esc(sysd.system_name || 'system')}</span>` +
+             `<span class="pmeta">${(p.bill_of_materials || []).length} parts · ${esc(sysd.engine || '')} · view →</span>` +
+             `<button class="pdf" data-id="${esc(p.id || '')}" title="Download this prototype as PDF">📄 PDF</button></div>`;
     }).join('') : '<div class="muted small">no prototypes yet — synthesize one above</div>';
     box.querySelectorAll('.proto-row').forEach((row) =>
       row.addEventListener('click', () => openPrototype(row.dataset.id)));
+    box.querySelectorAll('.pdf').forEach((b) =>
+      b.addEventListener('click', (e) => { e.stopPropagation(); exportPrototypePdf(b.dataset.id); }));
   } catch { box.innerHTML = '<div class="muted small">—</div>'; }
 }
 

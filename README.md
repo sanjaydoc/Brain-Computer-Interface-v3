@@ -17,10 +17,13 @@ proposes; only the physics can move the score — so a persuasive idea that viol
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-0d0d0f.svg)](LICENSE)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-2f6fed.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-29%20passing-0e9f6e.svg)](backend/tests)
+[![Tests](https://img.shields.io/badge/tests-34%20passing-0e9f6e.svg)](backend/tests)
 [![Topics](https://img.shields.io/badge/innovation%20topics-10-635bff.svg)](#-the-10-innovation-topics)
 [![Lenses](https://img.shields.io/badge/invention%20lenses-10-635bff.svg)](#-the-invention-engine)
 [![LLM](https://img.shields.io/badge/LLM-local%20Qwen%20first%20·%20NIM%20fallback-d98218.svg)](RUN.md)
+[![Website](https://img.shields.io/badge/website-live-0e9f6e.svg)](https://sanjaydoc.github.io/Brain-Computer-Interface-v3/)
+
+**🌐 Live site: [sanjaydoc.github.io/Brain-Computer-Interface-v3](https://sanjaydoc.github.io/Brain-Computer-Interface-v3/)**  ·  **🕹 Cockpit: [/app/](https://sanjaydoc.github.io/Brain-Computer-Interface-v3/app/)**
 
 _Author: **Dr. Sanjay Anbu**_
 

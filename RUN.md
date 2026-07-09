@@ -503,7 +503,14 @@ bci synthesize --history  # list previously saved prototypes (newest first)
 
 Every successful `synthesize` is **saved as a prototype** to the `syntheses` table (MongoDB, JSONL
 fallback), so re-running builds a library you can browse — in the terminal with `--history`, or in the
-cockpit under **Saved prototypes** in the Synthesize panel.
+cockpit under **Saved prototypes** in the Synthesize panel (each row is clickable to reopen its full
+schematic).
+
+**Mix & match (cockpit).** When you have more than one passing invention for a topic, the Synthesize
+panel shows a **per-topic dropdown** — each option labelled `#n · title · date · score`. Pick which
+invention feeds each of the 10 topics (defaults to the best-scoring), then hit **Synthesize** to fuse
+*that* combination. Different picks → different prototypes, so you can explore many combinations. In
+**Saved inventions** each design carries its **number (#n) and date** so you can tell versions apart.
 
 It's **gated**: with fewer than 10 passing it prints the progress and stays locked
 (`🔒 Synthesize is locked — solve all 10`). In the cockpit it's the **🧬 Synthesize** button — disabled

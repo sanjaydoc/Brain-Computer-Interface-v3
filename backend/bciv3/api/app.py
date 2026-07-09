@@ -171,17 +171,24 @@ def do_benchmarks(limit: int = 20) -> dict:
 
 @app.get("/api/synthesis")
 def do_synthesis_status() -> dict:
-    """Per-topic solved state + the gate — powers the progress table and the Synthesize button lock."""
+    """Per-topic solved state + the gate + the passing-invention candidates for each topic (so the
+    Synthesize picker can offer a dropdown per topic)."""
     import bciv3
-    return bciv3.synthesis.status()
+    st = bciv3.synthesis.status()
+    st["candidates"] = bciv3.synthesis.candidates()
+    return st
+
+
+class SynthReq(BaseModel):
+    selection: dict[str, str] | None = None    # {topic: invention_id} — hand-pick per topic
 
 
 @app.post("/api/synthesize")
-def do_synthesize() -> dict:
-    """Fuse the 10 passing designs into one end-to-end brain-uploading system, and SAVE it as a
-    prototype in the `syntheses` table."""
+def do_synthesize(req: SynthReq | None = None) -> dict:
+    """Fuse the 10 passing designs (optionally hand-picked per topic via `selection`) into one
+    end-to-end system, and SAVE it as a prototype in the `syntheses` table."""
     import bciv3
-    return bciv3.synthesis.synthesize()
+    return bciv3.synthesis.synthesize(selection=(req.selection if req else None))
 
 
 @app.get("/api/syntheses")

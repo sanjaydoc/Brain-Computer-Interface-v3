@@ -176,3 +176,17 @@ select:hover { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://ww
 .bom .bi b { color: var(--ink); } .bom .bi .ph { font-size: .64rem; text-transform: uppercase; color: var(--muted); align-self: center; }
 .proto-row { cursor: pointer; }
 .proto-row:hover { border-color: var(--molecular); color: var(--ink); }
+
+/* saved-invention number + date */
+.inv-row .num { font-family: "JetBrains Mono", monospace; font-size: .72rem; color: var(--muted); flex: 0 0 auto; }
+.inv-row .dt { font-family: "JetBrains Mono", monospace; font-size: .68rem; color: var(--muted); margin-left: auto; padding-right: .5rem; }
+
+/* synthesize per-topic invention picker */
+.synth-pick { display: flex; flex-direction: column; gap: .4rem; margin: .3rem 0 .2rem; }
+.synth-prow { display: grid; grid-template-columns: 18px minmax(160px, 1fr) minmax(220px, 1.4fr); align-items: center; gap: .5rem; }
+.synth-prow .pt { font-size: .84rem; color: var(--ink-2); }
+.synth-prow.on .pt { color: var(--ink); font-weight: 600; }
+.synth-prow .psel { width: 100%; font-size: .74rem; padding: .3rem .4rem; border: 1px solid var(--hair); border-radius: var(--radius-sm); background: var(--paper); color: var(--ink); font-family: "JetBrains Mono", monospace; }
+.synth-prow .psel:hover, .synth-prow .psel:focus { border-color: var(--molecular); outline: none; }
+.psel-locked { font-size: .74rem; color: var(--muted); }
+@media (max-width: 720px) { .synth-prow { grid-template-columns: 18px 1fr; } .synth-prow .psel { grid-column: 1 / -1; } }

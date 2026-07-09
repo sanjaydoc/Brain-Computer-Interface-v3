@@ -349,9 +349,11 @@ async function renderSaved() {
   box.innerHTML = TOPIC_IDS.map((tid, i) => {
     const rows = groups[tid] || [];
     rows.forEach((r) => { savedById[r.id] = r; });
-    const inner = rows.length ? rows.map((r) =>
+    const inner = rows.length ? rows.map((r, j) =>
       `<div class="inv-row" data-id="${esc(r.id)}" title="click to read the full invention"><span class="dot ${r.score.passed ? 'p' : 'f'}"></span>` +
+      `<span class="num">#${j + 1}</span>` +
       `<span class="ti">${esc(r.title || TOPICS[tid].title)}</span>` +
+      `<span class="dt">${esc(String(r.ts || '').slice(0, 16).replace('T', ' '))}</span>` +
       `<span class="sc">${(+r.score.score).toFixed(3)}</span>` +
       `<button class="del" data-id="${esc(r.id)}" title="delete">🗑</button></div>`).join('')
       : '<div class="cat-empty">no saved inventions yet</div>';
@@ -482,16 +484,24 @@ async function loadSynthStatus() {
   try {
     const r = await fetch(API + '/api/synthesis', { signal: AbortSignal.timeout(8000) });
     const st = await r.json();
+    const cands = st.candidates || {};
     const pct = Math.round(100 * st.solved_count / st.total);
     grid.innerHTML =
       `<div class="synth-meter"><i style="width:${pct}%"></i></div>` +
-      `<div class="synth-grid">${TOPIC_IDS.map((tid) => {
-        const on = !!(st.solved && st.solved[tid]);
-        return `<div class="synth-row ${on ? 'on' : ''}"><span class="dot ${on ? 'on' : 'off'}">${on ? '✓' : ''}</span>` +
-               `<span class="nm">${esc(TOPICS[tid].title)}</span></div>`;
+      `<p class="muted small" style="margin:.2rem 0 .5rem">Pick which invention feeds each topic — mix combinations to make different prototypes. Defaults to the best-scoring.</p>` +
+      `<div class="synth-pick">${TOPIC_IDS.map((tid, i) => {
+        const list = cands[tid] || [];
+        const on = list.length > 0;
+        const opts = list.map((c, j) =>
+          `<option value="${esc(c.id)}">#${j + 1} · ${esc((c.title || TOPICS[tid].title).slice(0, 40))} · ${esc(String(c.ts || '').slice(0, 16).replace('T', ' '))} · ${(+c.score).toFixed(3)}</option>`).join('');
+        const sel = on
+          ? `<select class="psel" data-topic="${tid}">${opts}</select>`
+          : `<span class="psel-locked">🔒 solve this blocker first</span>`;
+        return `<div class="synth-prow ${on ? 'on' : ''}"><span class="dot ${on ? 'on' : 'off'}">${on ? '✓' : ''}</span>` +
+               `<span class="pt">${i + 1}. ${esc(TOPICS[tid].title)}</span>${sel}</div>`;
       }).join('')}</div>`;
     btn.disabled = !st.complete;
-    gate.textContent = st.complete ? '✓ all 10 passing — ready to synthesize'
+    gate.textContent = st.complete ? '✓ all 10 passing — pick & synthesize'
       : `🔒 ${st.solved_count}/${st.total} solved — pass all 10 to unlock`;
   } catch {
     grid.innerHTML = '<div class="muted small">could not load progress</div>'; btn.disabled = true;
@@ -555,9 +565,14 @@ async function loadSynthHistory() {
 
 async function runSynthesize() {
   const btn = $('run-synth'), box = $('synth-result');
-  btn.disabled = true; box.innerHTML = '<div class="muted small" style="margin-top:1rem">🧬 fusing the 10 solved designs into one system…</div>';
+  const selection = {};                        // {topic: chosen invention id}
+  document.querySelectorAll('.psel').forEach((s) => { if (s.value) selection[s.dataset.topic] = s.value; });
+  btn.disabled = true; box.innerHTML = '<div class="muted small" style="margin-top:1rem">🧬 fusing your chosen designs into one system…</div>';
   try {
-    const r = await fetch(API + '/api/synthesize', { method: 'POST', signal: AbortSignal.timeout(600000) });
+    const r = await fetch(API + '/api/synthesize', {
+      method: 'POST', headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ selection }), signal: AbortSignal.timeout(600000),
+    });
     box.innerHTML = renderSynthResult(await r.json());
     loadSynthHistory();                       // refresh the prototype library with the new one
   } catch (e) {

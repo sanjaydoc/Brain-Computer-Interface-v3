@@ -54,6 +54,30 @@ def _best_passing(topic: str) -> dict | None:
     return None
 
 
+def _record_by_id(topic: str, rid: str) -> dict | None:
+    """A specific PASSING record by id (for hand-picked synthesis), or None."""
+    for r in store.list_records(topic, limit=500):
+        if r.get("id") == rid and (r.get("score") or {}).get("passed"):
+            return r
+    return None
+
+
+def candidates() -> dict:
+    """Per-topic list of PASSING inventions (id, title, score, ts) — the options for the Synthesize
+    picker, best-first. Lets you mix & match a different invention per topic into each prototype."""
+    out = {}
+    for tid in all_ids():
+        rows = []
+        for r in store.list_records(tid, limit=200):
+            sc = r.get("score") or {}
+            if sc.get("passed"):
+                rows.append({"id": r.get("id"), "title": r.get("title") or CATALOG[tid].title,
+                             "score": sc.get("score"), "ts": r.get("ts"),
+                             "model": r.get("model"), "lens": r.get("lens")})
+        out[tid] = rows
+    return out
+
+
 def status() -> dict:
     """Per-topic solved state + the gate. `complete` is True only when all 10 pass."""
     solved, missing = {}, []
@@ -131,17 +155,23 @@ def _deterministic_overview(pipeline: list[dict]) -> dict:
             "open_risks": ["Each stage is physically admissible in-model, not yet proven in a living human brain."]}
 
 
-def synthesize(save: bool = True) -> dict:
-    """Fuse the 10 passing designs into one system. Raises if the gate isn't met (all 10 must pass).
-    Each run is saved as a 'prototype' to the `syntheses` table (unless save=False), so the library
-    of prototypes grows over time."""
+def synthesize(save: bool = True, selection: dict | None = None) -> dict:
+    """Fuse 10 passing designs into one system. Raises if the gate isn't met (all 10 must pass).
+
+    ``selection`` is an optional ``{topic: invention_id}`` map — the hand-picked invention to use for
+    each topic (falls back to the best passing one for any topic not chosen). This is how you mix &
+    match combinations into different prototypes. Each run is saved to the `syntheses` table."""
     st = status()
     if not st["complete"]:
         return {"complete": False, "missing": st["missing"], "solved_count": st["solved_count"],
                 "total": st["total"], "error": "Solve all 10 blockers first — "
                 f"{st['solved_count']}/{st['total']} passing."}
 
-    records = {tid: _best_passing(tid) for tid in all_ids()}
+    selection = selection or {}
+    records = {}
+    for tid in all_ids():
+        rid = selection.get(tid)
+        records[tid] = (_record_by_id(tid, rid) if rid else None) or _best_passing(tid)
     pipeline = _pipeline(records)
     system = _llm_overview(records) or _deterministic_overview(pipeline)
     system["engine"] = "llm" if llm.available() else "template"

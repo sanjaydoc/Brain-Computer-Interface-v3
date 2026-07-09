@@ -633,9 +633,9 @@ function exportPrototypePdf(id) {
 // Open the server-rendered ~30-page research monograph for a prototype; it auto-triggers the
 // browser print dialog (→ Save as PDF). Requires the API (bci serve) to be up.
 function exportResearchPdf(id) {
-  // live backend renders it on the fly; otherwise open the pre-rendered static monograph (GitHub Pages)
+  // live backend renders it on the fly; otherwise open the pre-rendered ~30-page PDF (GitHub Pages)
   const url = apiUp ? (API + '/api/research/' + encodeURIComponent(id))
-                    : ('../data/research/' + encodeURIComponent(id) + '.html');
+                    : ('../data/research/' + encodeURIComponent(id) + '.pdf');
   const w = window.open(url, '_blank');
   if (!w) alert('Pop-up blocked — allow pop-ups for this page to open the research PDF.');
 }

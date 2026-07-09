@@ -188,6 +188,143 @@ WETLAB = {
                      "phantom + animal", "realised I_SPTA, MI, delivered dose", "all below FDA ceilings with margin"),
 }
 
+# Detailed step-by-step wet-lab / validation protocols — one per experiment (E1-E10). Each has a
+# hypothesis, reagents/apparatus, a numbered method, positive/negative controls, secondary readouts,
+# an explicit go / no-go decision, and an estimated duration and replicate count.
+WETLAB_PROTOCOL = {
+    "neuron_delivery": {
+        "hypothesis": "An engineered BBB-crossing capsid, optionally aided by focused-ultrasound BBB opening, transduces >=99% of neurons at a systemic dose below the toxicity ceiling.",
+        "reagents": ["AAV vector (engineered capsid) packaging a ubiquitous-promoter fluorescent reporter", "Dose-titration series (e.g. 1e11-1e14 vg/kg)", "Focused-ultrasound rig + microbubbles (BBB-opening arm)", "Anti-NeuN and cell-type antibody panel", "Tissue-clearing + light-sheet reagents"],
+        "method": ["Administer the vector intravenously across the dose series (n>=4 per dose).",
+                   "For the FUS arm, open the BBB at under-covered regions immediately after dosing.",
+                   "Wait 3-4 weeks for expression; perfuse and clear whole brains.",
+                   "Light-sheet image; segment reporter+ and NeuN+ nuclei brain-wide.",
+                   "Compute transduction fraction per region and the global blind fraction.",
+                   "Assay liver/DRG for off-target load and inflammatory markers."],
+        "controls": "Positive: known-strong capsid at high dose. Negative: vehicle only, and a non-BBB-crossing capsid.",
+        "secondary": "Regional coverage uniformity; anti-capsid immune titre; body-weight/behaviour toxicity signs.",
+        "gonogo": "GO if transduction >=0.99 with blind <=1% and no dose-limiting toxicity; else escalate capsid engineering or add FUS assist.",
+        "duration": "~8-10 weeks; n>=4 per dose across >=5 doses (mouse), then a small NHP confirmation.",
+    },
+    "multiplexed_reporters": {
+        "hypothesis": "A combinatorial barcode library expresses and is demultiplexed at >=46 reliably-separable bits with <1% collision in tissue.",
+        "reagents": ["Barcode reporter library (orthogonal reporter families)", "AAV delivery vector", "Tissue phantom with known ground-truth barcodes", "In-situ readout instrument (acoustic/optical per build)", "Reference codebook + demultiplexing pipeline"],
+        "method": ["Synthesise a barcode library spanning the target bit-depth.",
+                   "Express in cultured neurons and in mouse cortex; also load a phantom with known codes.",
+                   "Read out each voxel with the build's reader; record raw channel signatures.",
+                   "Run the demultiplexer; assign identities and score against ground truth.",
+                   "Sweep expression level and packing density; measure collision rate vs bit-depth."],
+        "controls": "Positive: single high-contrast reporter (trivially separable). Negative: null/empty cassette.",
+        "secondary": "Per-family expression uniformity; readout crosstalk matrix; long-term reporter stability.",
+        "gonogo": "GO if separable bits >=46 and collision <1% in tissue; else add orthogonal reporter families or improve readout resolution.",
+        "duration": "~10-12 weeks; phantom first, then in-vivo cortex (n>=3).",
+    },
+    "in_vivo_readout": {
+        "hypothesis": "Focused ultrasound recovers gas-vesicle barcode signal with P_detect>=0.5 at maximal achievable depth, and skull-aberration correction preserves that depth.",
+        "reagents": ["Gas-vesicle (or build-specific) reporter", "Phased-array FUS transducer + receive electronics", "Holographic/adaptive skull-aberration corrector", "Depth phantom (tissue-mimicking, skull cap)", "Rodent transcranial prep"],
+        "method": ["Calibrate the array on the depth phantom; measure SNR vs depth with correction on/off.",
+                   "Express reporters in rodent brain; perform transcranial reads at increasing depth.",
+                   "Record realised I_SPTA and MI at each setting with a hydrophone.",
+                   "Fit SNR(d)=SNR0*exp(-d/lambda); extrapolate P_detect to the 75 mm human target.",
+                   "Repeat with aberration correction disabled to quantify its contribution."],
+        "controls": "Positive: shallow read (near-field). Negative: no-reporter animal (background only).",
+        "secondary": "Aberration-correction gain (delta-lambda); thermal rise; motion sensitivity.",
+        "gonogo": "GO if P_detect>=0.5 at max depth within I_SPTA<=720 / MI<=1.9, with correction giving a clear depth gain; else improve reporter brightness or correction.",
+        "duration": "~12-16 weeks; phantom then rodent (n>=4).",
+    },
+    "snr_depth": {
+        "hypothesis": "Reporter-brightness gain and coherent averaging combine multiplicatively to hold P_detect>=0.5 at depth, with brightness the dominant lever.",
+        "reagents": ["Amplifying reporter (e.g. bioluminescent/photoacoustic cascade)", "Calibrated luminance/pressure reference sources", "Depth phantom", "Averaging-capable acquisition pipeline"],
+        "method": ["Quantify absolute reporter brightness vs a calibrated source.",
+                   "Measure SNR at depth as a function of averaging N (isolate the sqrt(N) term).",
+                   "Measure the brightness (gain G) term independently at fixed N.",
+                   "Combine and confirm the multiplicative model; find the minimal (G, N) that clears P>=0.5.",
+                   "Trade averaging against dwell/scan-time budget."],
+        "controls": "Positive: bright fluorophore standard. Negative: non-amplifying baseline reporter.",
+        "secondary": "Photobleaching/consumption kinetics; background autofluorescence; averaging-induced motion blur.",
+        "gonogo": "GO if combined gain yields P_detect>=0.5 at depth within the dwell budget; else prioritise brighter reporters.",
+        "duration": "~8 weeks; phantom-based, with reporter validation in vitro.",
+    },
+    "scan_throughput": {
+        "hypothesis": "A massively-parallel transducer/detector array sustains a per-voxel rate that extrapolates to a whole-brain scan under 30 days.",
+        "reagents": ["Prototype parallel array (subset of full channel count)", "Multi-channel DAQ + FPGA front-end", "Synthetic voxel-load generator", "Beam/scan controller"],
+        "method": ["Build a channel-count subset of the full array.",
+                   "Drive it with a synthetic voxel load at the target dwell.",
+                   "Measure sustained voxels/s and per-channel duty cycle.",
+                   "Characterise crosstalk and thermal limits at full duty.",
+                   "Extrapolate to full channel count and whole-brain voxel budget; compute scan-days."],
+        "controls": "Positive: single-channel throughput x channel count (ideal linear). Negative: idle array (noise floor).",
+        "secondary": "Data-bus saturation; storage write throughput; calibration drift over a long run.",
+        "gonogo": "GO if extrapolated whole-brain scan <30 days at stable duty; else raise parallelism or cut dwell.",
+        "duration": "~12 weeks (hardware bench).",
+    },
+    "transsynaptic_pairing": {
+        "hypothesis": "Trans-synaptic barcode transfer recovers pre->post edges at F1>=0.90 against an EM ground truth.",
+        "reagents": ["Trans-synaptic barcode-transfer system", "Molecular consensus tags", "Sequencing/readout chemistry", "Defined microcircuit prep with co-registered EM"],
+        "method": ["Express the pairing system in a defined microcircuit.",
+                   "Recover paired barcodes by sequencing at set depth.",
+                   "Reconstruct candidate edges with consensus filtering.",
+                   "Co-register with volumetric EM of the same tissue.",
+                   "Score edge precision/recall/F1; sweep reads-per-synapse and min-reads."],
+        "controls": "Positive: sparse, unambiguous known pairs. Negative: non-synaptic cell pairs (should not pair).",
+        "secondary": "Dropout rate; false-pair rate vs consensus depth; transfer efficiency.",
+        "gonogo": "GO if F1>=0.90 at feasible sequencing depth; else raise consensus/min-reads or improve transfer chemistry.",
+        "duration": "~16-20 weeks (includes EM cross-validation).",
+    },
+    "exabyte_assembly": {
+        "hypothesis": "A consensus-plus-confidence assembler reconstructs a held-out connectome at <=5% residual edge error within the storage budget.",
+        "reagents": ["Existing EM/other connectome dataset", "Assembly + error-correction pipeline", "Compute/storage cluster"],
+        "method": ["Down-sample a known connectome to simulate noisy reads at set redundancy.",
+                   "Run the assembler; reconstruct the wiring graph.",
+                   "Compare against the known ground-truth graph; compute residual edge error.",
+                   "Sweep consensus min-reads and bytes-per-read; record storage used.",
+                   "Profile I/O and compute throughput at scale."],
+        "controls": "Positive: noise-free reads (should reconstruct exactly). Negative: shuffled reads (should fail).",
+        "secondary": "Error vs redundancy curve; storage vs accuracy trade; wall-clock at scale.",
+        "gonogo": "GO if residual error <=5% within storage budget and tractable wall-clock; else raise redundancy or improve the consensus model.",
+        "duration": "~8-12 weeks (computational).",
+    },
+    "twin_sim_scale": {
+        "hypothesis": "A lean per-synapse kernel achieves a real-time factor >=1 at the target scale on realistic accelerator hardware.",
+        "reagents": ["Sparse per-synapse compute kernel", "GPU/accelerator cluster", "Partition-native graph loader", "Scaling harness"],
+        "method": ["Implement and micro-benchmark the per-synapse update kernel.",
+                   "Measure achieved FLOP per synapse-step and memory bandwidth.",
+                   "Scale from a small graph to progressively larger partitions.",
+                   "Extrapolate real-time factor to the 1e14-synapse target.",
+                   "Test faithfulness against a reference model on a small circuit."],
+        "controls": "Positive: dense reference implementation on a small graph. Negative: unoptimised kernel baseline.",
+        "secondary": "Strong/weak scaling efficiency; communication overhead; numerical drift vs reference.",
+        "gonogo": "GO if extrapolated RTF>=1 at target scale with acceptable fidelity; else reduce per-synapse cost or add hardware.",
+        "duration": "~8-12 weeks (HPC).",
+    },
+    "behavioral_verification": {
+        "hypothesis": "A discriminative stimulus battery certifies twin-vs-original behavioural fidelity >=0.90 with controlled false-positive rate.",
+        "reagents": ["Stimulus-battery generator", "Behavioural divergence metric", "Paired twin runner (truth vs recovered)", "Animal + its digital twin"],
+        "method": ["Assemble a stimulus battery spanning the behaviours of interest.",
+                   "Run identical stimuli through the original and the twin in closed loop.",
+                   "Compute behavioural divergence per stimulus and aggregate fidelity.",
+                   "Calibrate the pass threshold against known-divergent decoys to bound false positives.",
+                   "Repeat across subjects; report fidelity distribution."],
+        "controls": "Positive: twin = copy of original (should pass). Negative: deliberately perturbed twin (should fail).",
+        "secondary": "Per-behaviour sensitivity; battery coverage; test-retest stability.",
+        "gonogo": "GO if fidelity>=0.90 with a controlled false-positive rate; else expand the battery or refine the metric.",
+        "duration": "~10-14 weeks.",
+    },
+    "human_safety": {
+        "hypothesis": "Realised ultrasound intensity, mechanical index, and delivered viral dose all remain below FDA ceilings with margin across the full chain.",
+        "reagents": ["Calibrated hydrophone + thermometry", "Biodistribution assay (qPCR/imaging)", "Tissue phantom + animal", "Reversible/switchable reporter (if used)"],
+        "method": ["Map realised I_SPTA and MI in situ across the operating envelope.",
+                   "Measure delivered vg/kg and biodistribution after dosing.",
+                   "Run the full read+deliver chain and log peak exposures.",
+                   "Compare every quantity against its FDA ceiling; compute margins.",
+                   "If reversibility is claimed, demonstrate switch-off."],
+        "controls": "Positive: known safe clinical settings. Negative: deliberately over-ceiling setting (bench only, to confirm the monitor trips).",
+        "secondary": "Thermal dose maps; histopathology; long-term expression clearance.",
+        "gonogo": "GO if all three limits are met with margin and reversibility (if claimed) works; else reduce intensity/dose.",
+        "duration": "~12-16 weeks (IND-enabling style).",
+    },
+}
+
 
 def _collect(synth: dict) -> dict:
     """Build {topic: module-record} for all 10 topics from the synthesis prototype.
@@ -387,6 +524,12 @@ table.sci tbody tr{border-bottom:1px solid #e6e6e6}table.sci tbody tr:last-child
 .refnote{font-size:8.5px;color:#666;font-style:italic}
 .decl{font-size:9px;color:#444;margin-top:.5rem;border-top:1px solid #e3e3d8;padding-top:.35rem}
 .bench{background:#f2f6f2;border-left:3px solid #2c6e2c;padding:.3rem .5rem;font-size:9.5px;margin:.4rem 0}
+.proto{break-inside:avoid;margin:.7rem 0;padding:.5rem .6rem;border:1px solid #e6e6e6;border-radius:4px;background:#fcfcfb}
+.proto .ph{font-size:11px;font-weight:700;color:#2c4a2c;margin:0 0 .25rem}
+.proto .hyp{font-size:9.5px;margin:.2rem 0 .35rem}
+.proto .lbl{font-size:8.5px;text-transform:uppercase;letter-spacing:.05em;color:#777;font-weight:700;margin:.1rem 0 .15rem}
+.proto .protab{margin:.35rem 0 0}.proto .protab .k{width:26%;color:#555;font-weight:700;font-size:9px;vertical-align:top}
+.proto:nth-of-type(2n+1){break-before:auto}
 .modstart{break-before:page}.s.secbreak{break-before:page}
 @media print{body{-webkit-print-color-adjust:exact;print-color-adjust:exact}}
 """
@@ -580,6 +723,33 @@ def build_html(synth: dict, autoprint: bool = True) -> str:
              '(barcoding and deep read) and map directly onto the phase gates above.</p>' +
              tbl("Per-module wet-lab and validation experiments for this prototype.",
                  '<tr><th>#</th><th>Module</th><th>Experiment</th><th>Model system</th><th>Primary readout</th><th>Success criterion</th></tr>', wl))
+
+    # 5.2 detailed step-by-step protocols (one per experiment) — the bench-runnable detail
+    B.append('<h3 class="ss">5.2 Detailed experimental protocols (E1-E10)</h3>'
+             f'<p>Each experiment below is written to be run at the bench: hypothesis, reagents and apparatus, '
+             'a numbered method, positive and negative controls, secondary readouts, an explicit go / no-go '
+             'decision, and an estimated duration and replicate count. Protocols are specific to '
+             f'{_esc(name)} and its chosen modules.</p>')
+    for i, t in enumerate(TOPIC_ORDER, 1):
+        wp = WETLAB_PROTOCOL[t]
+        _, model, readout, crit = WETLAB[t]
+        reag = "".join(f"<li>{_esc(x)}</li>" for x in wp["reagents"])
+        steps = "".join(f"<li>{_esc(x)}</li>" for x in wp["method"])
+        B.append(
+            f'<div class="proto"><h4 class="ph">E{i} · {_esc(_short(E[t].get("title")))} '
+            f'<span class="phtag">[{_esc(TNAME[t])}]</span></h4>'
+            f'<p class="hyp"><b>Hypothesis.</b> {_esc(wp["hypothesis"])}</p>'
+            f'<div class="twocol"><div><p class="lbl">Reagents &amp; apparatus</p><ul class="tight">{reag}</ul></div>'
+            f'<div><p class="lbl">Method</p><ol class="tight">{steps}</ol></div></div>'
+            f'<table class="sci mini protab"><tbody>'
+            f'<tr><td class="k">Model system</td><td>{_esc(model)}</td></tr>'
+            f'<tr><td class="k">Controls</td><td>{_esc(wp["controls"])}</td></tr>'
+            f'<tr><td class="k">Primary readout</td><td>{_esc(readout)}</td></tr>'
+            f'<tr><td class="k">Secondary readouts</td><td>{_esc(wp["secondary"])}</td></tr>'
+            f'<tr><td class="k">Success criterion</td><td class="mono small">{_esc(crit)}</td></tr>'
+            f'<tr><td class="k">Go / No-Go</td><td>{_esc(wp["gonogo"])}</td></tr>'
+            f'<tr><td class="k">Duration &amp; N</td><td>{_esc(wp["duration"])}</td></tr>'
+            f'</tbody></table></div>')
 
     # 6 Discussion
     sens = "".join(f'<tr><td>{_esc(TNAME[t])}</td><td>{_esc(d)}</td></tr>' for t, d in [

@@ -55,6 +55,7 @@ simulator can grade. Output ONLY raw JSON, no markdown.
 TARGET (innovation): {inv.title}
 DOMAIN: {inv.domain}   GOVERNING LAWS: {laws}
 SPEC (must meet): {inv.spec}
+{f"HOW THE SIMULATOR GRADES THIS (get the parameters right to PASS): {inv.guidance}" if getattr(inv, "guidance", "") else ""}
 USER PROMPT: {str(user_prompt or '').strip()[:300]}{grounding}{constraint_block}
 
 LENS — {directive}

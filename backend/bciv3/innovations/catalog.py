@@ -137,55 +137,89 @@ def _make() -> dict:
                    {"read_depth_um": DEEP_TARGET_UM, "non_destructive": True},
                    {"snr0": 12.0, "penetration_um": 80_000.0, "ispta_mw_cm2": 500.0, "mechanical_index": 1.2},
                    _eval_readout, fidelity="physics-only",
-                   keywords="in vivo brain imaging"),
+                   keywords="in vivo brain imaging",
+                   guidance="penetration_um must exceed the ~75000 um target depth; raise snr0 so the signal "
+                            "survives to depth (needs p_detect >= 0.5). Stay under FDA safety ceilings: "
+                            "ispta_mw_cm2 <= 720 and mechanical_index <= 1.9."),
         Innovation("multiplexed_reporters", "Massively-multiplexed reporters",
                    L("biomolecules"), "life-science", L("physics", "electronics"),
                    {"demultiplex_syn_per_voxel": HUMAN_SYN_PER_FUS_VOXEL},
                    {"barcode_bits": 30, "channels": 16, "syn_per_voxel": HUMAN_SYN_PER_FUS_VOXEL, "readout_tech": "acoustic_collapse"},
-                   _eval_multiplex, keywords="neuronal barcode sequencing"),
+                   _eval_multiplex, keywords="neuronal barcode sequencing",
+                   guidance="barcode_bits must be >= ~46 (birthday-bound capacity for 1e6 synapses at 1% "
+                            "collision) — set it to 48. CRITICAL: 'channels' is the number of PHYSICAL readout "
+                            "channels, NOT the number of identities. Combinatorial barcodes give 2^barcode_bits "
+                            "identities from just a few channels, so keep channels SMALL and within the "
+                            "readout_tech ceiling: acoustic_collapse=16, spectral_optical=32, mri_relaxation=8, "
+                            "pet_tracer=6 (sequencing allows 1e6 but is destructive/ex-vivo — not non-invasive). "
+                            "Never set channels to the synapse count. Good values: barcode_bits=48, channels=16, "
+                            "readout_tech=acoustic_collapse."),
         Innovation("transsynaptic_pairing", "Trans-synaptic pairing at scale + fidelity",
                    L("biomolecules"), "life-science", L("physics"),
                    {"target_edge_f1": 0.9},
                    {"dropout": 0.2, "false_pair_rate": 0.05, "reads_per_synapse": 6, "min_reads": 2, "target_f1": 0.9},
-                   _eval_pairing, keywords="trans-synaptic tracing connectomics"),
+                   _eval_pairing, keywords="trans-synaptic tracing connectomics",
+                   guidance="predicted edge F1 must reach target_f1 (0.9). Lower dropout and false_pair_rate; "
+                            "raise reads_per_synapse above min_reads for consensus (boosts recall) and keep "
+                            "min_reads >= 2-3 to suppress false pairs (boosts precision)."),
         Innovation("neuron_delivery", "~100% neuron delivery (BBB-crossing)",
                    L("biomolecules"), "cell-therapy", L("biophysics"),
                    {"target_coverage": 0.99},
                    {"transduction_fraction": 0.9, "aav_dose_vg_per_kg": 5e13, "target_coverage": 0.99},
-                   _eval_delivery, keywords="AAV blood-brain barrier gene delivery"),
+                   _eval_delivery, keywords="AAV blood-brain barrier gene delivery",
+                   guidance="transduction_fraction must be >= target_coverage (0.99) so blind_fraction <= 0.01. "
+                            "Keep aav_dose_vg_per_kg <= 1e14 (toxicity ceiling); an efficient BBB-crossing capsid "
+                            "reaches high coverage at low dose."),
         Innovation("snr_depth", "Signal boost + noise cut at depth (SNR)",
                    L("hardware", "biomolecules"), "electronics", L("physics", "biophysics"),
                    {"read_depth_um": DEEP_TARGET_UM},
                    {"snr0": 12.0, "signal_gain": 2.0, "noise_floor": 1.0, "averaging_n": 16, "penetration_um": 80_000.0},
-                   _eval_snr, keywords="deep tissue optical imaging brain"),
+                   _eval_snr, keywords="deep tissue optical imaging brain",
+                   guidance="effective SNR after signal_gain x averaging must give p_detect >= 0.5 at the "
+                            "~75000 um depth. Raise signal_gain and averaging_n (sqrt(N) gain), lower "
+                            "noise_floor, and make penetration_um reach the depth."),
         Innovation("scan_throughput", "Whole-brain scan throughput",
                    L("hardware"), "hardware", L("electronics"),
                    {"target_scan_days": 30},
                    {"voxel_um": 100.0, "dwell_s": 1e-3, "parallel_channels": 1024, "target_days": 30},
-                   _eval_throughput, keywords="high-throughput volumetric brain imaging"),
+                   _eval_throughput, keywords="high-throughput volumetric brain imaging",
+                   guidance="scan_days = (brain voxels x dwell_s) / parallel_channels must be <= target_days. "
+                            "Cut dwell_s to microseconds and raise parallel_channels massively; a larger "
+                            "voxel_um means fewer voxels to read."),
         Innovation("exabyte_assembly", "Exabyte-scale assembly + error-correction",
                    L("software", "brain-template"), "software", L("electronics"),
                    {"target_assembly_error": 0.05},
                    {"reads_per_synapse": 6, "bytes_per_read": 4, "min_reads": 3, "storage_exabytes": 10.0, "target_error": 0.05},
                    _eval_assembly, fidelity="estimate",
-                   keywords="connectome reconstruction electron microscopy"),
+                   keywords="connectome reconstruction electron microscopy",
+                   guidance="data_exabytes = 1e14 synapses x reads_per_synapse x bytes_per_read / 1e18 must be "
+                            "<= storage_exabytes; residual_error = 0.5^(min_reads-1) must be <= target_error "
+                            "(raise min_reads). Keep reads_per_synapse and bytes_per_read modest."),
         Innovation("twin_sim_scale", "Whole-brain twin simulation",
                    L("software", "virtual-env"), "software", L("electronics"),
                    {"target_real_time_factor": 1.0},
                    {"hardware_flops": 1e18, "flops_per_syn_step": 10.0, "steps_per_biological_s": 1000.0, "target_real_time_factor": 1.0},
                    _eval_twinsim, fidelity="estimate",
-                   keywords="large-scale brain simulation"),
+                   keywords="large-scale brain simulation",
+                   guidance="real_time_factor = hardware_flops / (1e14 synapses x flops_per_syn_step x "
+                            "steps_per_biological_s) must be >= target_real_time_factor (1.0). Raise "
+                            "hardware_flops, or lower flops_per_syn_step / steps_per_biological_s."),
         Innovation("behavioral_verification", "Behavioural upload-verification",
                    L("virtual-env"), "software", L("physics"),
                    {"target_fidelity": 0.9},
                    {"edge_recall": 0.85, "protocol_sensitivity": 1.0, "n_stimuli": 8, "min_stimuli": 5, "target_fidelity": 0.9},
-                   _eval_verify, keywords="neural network behavior model validation"),
+                   _eval_verify, keywords="neural network behavior model validation",
+                   guidance="predicted_fidelity (rises with edge_recall and protocol_sensitivity) must be >= "
+                            "target_fidelity (0.9), AND n_stimuli >= min_stimuli for a discriminative protocol. "
+                            "Raise edge_recall and n_stimuli."),
         Innovation("human_safety", "Human safety of the whole chain",
                    L("biomolecules", "hardware"), "cell-therapy", L("biophysics"),
                    {"within_all_limits": True},
                    {"ispta_mw_cm2": 500.0, "mechanical_index": 1.2, "aav_dose_vg_per_kg": 5e13},
                    _eval_safety, fidelity="limits-only",
-                   keywords="transcranial focused ultrasound safety"),
+                   keywords="transcranial focused ultrasound safety",
+                   guidance="ALL three must stay under their ceilings: ispta_mw_cm2 <= 720, mechanical_index "
+                            "<= 1.9, aav_dose_vg_per_kg <= 1e14. Larger margins below the ceilings score higher."),
     ]
     return {it.id: it for it in items}
 

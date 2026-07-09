@@ -43,6 +43,7 @@ class Innovation:
     _evaluate: Callable[[dict], Score]
     fidelity: str = "full-sim"
     keywords: str = ""                 # concise domain search seed for literature grounding
+    guidance: str = ""                 # how the simulator grades this — param meanings + pass thresholds
 
     def evaluate(self, params: dict) -> Score:
         merged = {**self.param_schema, **(params or {})}

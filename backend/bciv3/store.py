@@ -16,22 +16,48 @@ from pathlib import Path
 _JSONL = Path(os.environ.get("BCIV3_JSONL", "inventions.jsonl"))
 
 
-def _col(name: str = "inventions"):
-    """Return a live Mongo collection, or None to signal JSONL fallback."""
+_CLIENT = None          # cached MongoClient (created once)
+_MONGO_OK = None        # None = unchecked, False = unavailable (cached so we don't re-ping every call)
+_INDEXED = False
+
+
+def _client():
+    """One cached Mongo client. The connect-and-ping happens once, not on every store read — a
+    synthesis touches the store ~30 times, and reconnecting each time (an 800ms timeout when Mongo is
+    down) is what used to make it hang. Set BCIV3_NO_MONGO=1 to force the JSONL fallback."""
+    global _CLIENT, _MONGO_OK
+    if os.environ.get("BCIV3_NO_MONGO", "").lower() in ("1", "true", "yes"):
+        return None
+    if _MONGO_OK is False:
+        return None
+    if _CLIENT is not None:
+        return _CLIENT
     try:
         import pymongo
     except Exception:
-        return None
+        _MONGO_OK = False; return None
     try:
-        uri = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
-        client = pymongo.MongoClient(uri, serverSelectionTimeoutMS=800)
-        client.admin.command("ping")                       # fail fast if Mongo is down
-        col = client[os.environ.get("MONGODB_DB", "bciv3")][name]
-        if name == "inventions":
-            col.create_index([("topic", 1)]); col.create_index([("score.score", -1)])
-        return col
+        c = pymongo.MongoClient(os.environ.get("MONGODB_URI", "mongodb://localhost:27017"),
+                                serverSelectionTimeoutMS=800)
+        c.admin.command("ping")                            # fail fast if Mongo is down
+        _CLIENT = c; _MONGO_OK = True; return c
     except Exception:
+        _MONGO_OK = False; return None
+
+
+def _col(name: str = "inventions"):
+    """Return a live Mongo collection, or None to signal JSONL fallback."""
+    global _INDEXED
+    c = _client()
+    if c is None:
         return None
+    col = c[os.environ.get("MONGODB_DB", "bciv3")][name]
+    if name == "inventions" and not _INDEXED:
+        try:
+            col.create_index([("topic", 1)]); col.create_index([("score.score", -1)]); _INDEXED = True
+        except Exception:
+            pass
+    return col
 
 
 def _mongo():

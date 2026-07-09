@@ -141,3 +141,36 @@ select:hover { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://ww
   .stage { grid-template-columns: 1fr; height: auto; }
   .viewer { height: 60vh; } .aside { border-left: 0; border-top: 1px solid var(--hair); }
 }
+
+/* ── synthesis: progress table, gated button, end-to-end schematic ── */
+.synth-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: .3rem .8rem; margin: .8rem 0; }
+.synth-row { display: flex; align-items: center; gap: .5rem; font-size: .84rem; padding: .25rem .1rem; }
+.synth-row .dot { width: 16px; height: 16px; border-radius: 50%; flex: 0 0 auto; display: grid; place-items: center; font-size: .6rem; color: #fff; }
+.synth-row .dot.on { background: var(--ok); } .synth-row .dot.off { background: var(--hair); color: var(--muted); }
+.synth-row .nm { color: var(--ink-2); } .synth-row.on .nm { color: var(--ink); font-weight: 600; }
+.synth-actions { display: flex; align-items: center; gap: .8rem; margin: .6rem 0 0; }
+.synth-actions .btn:disabled { opacity: .45; cursor: not-allowed; }
+.synth-meter { height: 8px; border-radius: 6px; background: var(--hair); overflow: hidden; margin: .5rem 0; }
+.synth-meter > i { display: block; height: 100%; background: linear-gradient(90deg, var(--molecular), var(--ok)); transition: width .4s; }
+
+.sys-name { font-family: var(--serif); font-size: 1.35rem; margin: 1.2rem 0 .2rem; }
+.sys-over { color: var(--ink-2); font-size: .92rem; line-height: 1.5; max-width: 72ch; }
+
+/* the schematic: horizontal phase flow inside a safety envelope */
+.schematic { border: 2px dashed var(--scanner); border-radius: var(--radius); padding: 1rem 1rem .6rem; margin: 1.1rem 0; position: relative; overflow-x: auto; }
+.schematic .safety-tag { position: absolute; top: -.7rem; left: 1rem; background: var(--paper); padding: 0 .5rem; font-size: .72rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--scanner); }
+.flow { display: flex; align-items: stretch; gap: 0; min-width: max-content; }
+.phase { display: flex; flex-direction: column; gap: .5rem; min-width: 190px; max-width: 230px; }
+.phase > h5 { font-family: var(--sans); font-size: .74rem; font-weight: 800; text-transform: uppercase; letter-spacing: .05em; color: var(--molecular); margin: 0 0 .1rem; }
+.phase-why { font-size: .7rem; color: var(--muted); margin: -.2rem 0 .3rem; line-height: 1.35; }
+.snode { background: var(--paper-2); border: 1px solid var(--hair); border-radius: var(--radius-sm); padding: .5rem .6rem; }
+.snode .st { font-weight: 700; font-size: .82rem; color: var(--ink); }
+.snode .sr { font-size: .72rem; color: var(--ink-2); margin: .15rem 0; line-height: 1.35; }
+.snode .sp { font-size: .66rem; color: var(--muted); font-family: "JetBrains Mono", monospace; }
+.arrow { display: flex; align-items: center; padding: 0 .35rem; color: var(--scanner); font-size: 1.3rem; }
+@media (max-width: 720px) { .synth-grid { grid-template-columns: 1fr; } }
+
+.how ol { margin: .3rem 0; padding-left: 1.3rem; } .how li { font-size: .86rem; color: var(--ink-2); line-height: 1.5; margin: .2rem 0; }
+.bom { display: grid; grid-template-columns: 1fr; gap: .25rem; margin: .3rem 0; }
+.bom .bi { display: grid; grid-template-columns: 1fr auto; gap: .5rem; font-size: .82rem; padding: .25rem .1rem; border-bottom: 1px solid var(--hair); }
+.bom .bi b { color: var(--ink); } .bom .bi .ph { font-size: .64rem; text-transform: uppercase; color: var(--muted); align-self: center; }

@@ -25,6 +25,7 @@
       <div class="nav-links">
         <button class="nav-btn" id="open-bench" title="Sweep all 10 topics N times, grade every attempt, and rank pass-rate + mean score — a model leaderboard. Run it per model to A-B them. Saved to the DB.">📊 Benchmark</button>
         <button class="nav-btn" id="open-saved" title="Browse every invention auto-saved to the database, grouped by the 10 innovation categories. Click one to read its full design; 🗑 to delete.">📚 Saved inventions</button>
+        <button class="nav-btn" id="open-synth" title="When all 10 blockers have a passing design, fuse them into one end-to-end brain-uploading system: a schematic, the full parts list, and how it works. Locked until 10/10 pass.">🧬 Synthesize</button>
         <span class="muted small">invention proposes · only physics moves the score</span>
       </div>
     </div>
@@ -64,6 +65,23 @@
     <div class="modal-card">
       <button class="modal-close" id="close-invdetail" title="close">✕</button>
       <div id="invdetail-body"></div>
+    </div>
+  </div>
+
+  <div class="modal" id="synth" hidden>
+    <div class="modal-card">
+      <button class="modal-close" id="close-synth" title="close">✕</button>
+      <div class="eyebrow">Capstone</div>
+      <h2>🧬 Synthesize the whole system</h2>
+      <p class="muted small" style="max-width:70ch">When all 10 blockers have a <b>passing</b> design, fuse them into one
+        end-to-end non-invasive brain-uploading system — a schematic of the whole pipeline, the full parts list, and how it
+        works. The button unlocks only at 10/10.</p>
+      <div id="synth-progress"></div>
+      <div class="synth-actions">
+        <button class="btn" id="run-synth" disabled>🧬 Synthesize the system</button>
+        <span class="muted small" id="synth-gate"></span>
+      </div>
+      <div id="synth-result"></div>
     </div>
   </div>
 

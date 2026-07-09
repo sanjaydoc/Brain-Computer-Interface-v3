@@ -169,6 +169,20 @@ def do_benchmarks(limit: int = 20) -> dict:
     return {"benchmarks": store.list_benchmarks(limit=limit)}
 
 
+@app.get("/api/synthesis")
+def do_synthesis_status() -> dict:
+    """Per-topic solved state + the gate — powers the progress table and the Synthesize button lock."""
+    import bciv3
+    return bciv3.synthesis.status()
+
+
+@app.post("/api/synthesize")
+def do_synthesize() -> dict:
+    """Fuse the 10 passing designs into one end-to-end brain-uploading system (schematic + parts)."""
+    import bciv3
+    return bciv3.synthesis.synthesize()
+
+
 # --- static cockpit (mounted last so /api/* always wins) ---------------------
 if DOCS.is_dir():
     @app.get("/")

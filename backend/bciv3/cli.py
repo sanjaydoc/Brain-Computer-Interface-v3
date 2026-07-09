@@ -128,6 +128,36 @@ def _bench(args) -> int:
     return 0
 
 
+def _synthesize(args) -> int:
+    import bciv3
+    st = bciv3.synthesis.status()
+    print(f"solved: {st['solved_count']}/{st['total']} passing")
+    for tid in bciv3.all_ids():
+        mark = "✓" if tid in st["solved"] else "·"
+        print(f"  [{mark}] {tid}")
+    if not st["complete"]:
+        print(f"\n🔒 Synthesize is locked — solve all 10 (missing: {', '.join(st['missing'])}).")
+        return 1
+    res = bciv3.synthesis.synthesize()
+    sysd = res["system"]
+    print(f"\n🧬 {sysd['system_name']}  (built via {sysd['engine']})")
+    print(f"\n{sysd['overview']}\n")
+    print("END-TO-END PIPELINE:")
+    for ph in res["pipeline"]:
+        print(f"\n  ── {ph['phase']} — {ph['why']}")
+        for s in ph["stages"]:
+            print(f"     → {s['title']}: {s['role']}")
+    print(f"\nHOW IT WORKS:")
+    for i, step in enumerate(sysd["how_it_works"], 1):
+        print(f"  {i}. {step}")
+    print(f"\nBILL OF MATERIALS ({len(res['bill_of_materials'])} parts):")
+    for p in res["bill_of_materials"]:
+        print(f"  · {p['name']} — {p['role']}  [{p['phase']}]")
+    if args.json:
+        print("\n" + json.dumps(res, indent=2, ensure_ascii=False, default=str))
+    return 0
+
+
 def _db(args) -> int:
     import bciv3
     if args.stats:
@@ -199,6 +229,10 @@ def main(argv=None) -> int:
     bn.add_argument("--constraint", default=None, choices=["noninvasive", "invasive"],
                     help="restrict all designs: noninvasive (biomolecules) or invasive (electrodes)")
     bn.set_defaults(fn=_bench)
+
+    sy = sub.add_parser("synthesize", help="fuse the 10 passing designs into one end-to-end BCI system (needs all 10)")
+    sy.add_argument("--json", action="store_true", help="also print the full structured result")
+    sy.set_defaults(fn=_synthesize)
 
     db = sub.add_parser("db", help="list saved inventions (or --stats)")
     db.add_argument("topic", nargs="?", default=None)

@@ -53,6 +53,13 @@ you get the kind of invention you actually want. Both flow through to the LLM pr
 </tr>
 </table>
 
+![Synthesize — the 10 solved blockers fused into one end-to-end brain-uploading system](docs/media/synthesis.png)
+
+> **The capstone — 🧬 Synthesize.** When all 10 blockers have a **passing** design, the button unlocks
+> and fuses them into one **end-to-end non-invasive brain-uploading system**: a schematic of the whole
+> `Label → Read → Map → Emulate` pipeline wrapped in a human-safety envelope, plus the consolidated
+> bill of materials and a step-by-step "how it works." Ten solved problems → one complete system.
+
 ![A real local-Qwen invention, read in full](docs/media/llm_invention.png)
 
 > **A real invention from local Qwen** (`bci record snr_depth "focused ultrasound, deep cortex,
@@ -94,6 +101,7 @@ you get the kind of invention you actually want. Both flow through to the LLM pr
 - ✅ **Auto-save to a database** — every invention (design + multi-domain detail + parts + score) is captured in **MongoDB**, grouped by the 10 categories, with delete; JSONL fallback when Mongo is down.
 - ✅ **Literature grounding** — searches **PubMed · arXiv · USPTO · PubChem · GitHub · SearXNG · Wikipedia** and invents from the retrieved prior art; citations are stored with the record.
 - ✅ **Benchmark** — `bci bench` sweeps topics × N samples → pass-rate + mean-score leaderboard per category (A-B models), saved to the DB.
+- ✅ **Synthesize** — once all 10 blockers have a **passing** design, fuse them into one **end-to-end brain-uploading system**: a schematic of the whole `Label → Read → Map → Emulate` pipeline (inside a human-safety envelope), the consolidated parts list, and how it works. The button unlocks only at 10/10.
 - ⬜ **Amber topics as full estimators** — richer models for assembly / twin-sim at scale (Phase 4).
 
 ---

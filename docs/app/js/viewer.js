@@ -472,6 +472,74 @@ $('close-bench').addEventListener('click', () => { $('bench').hidden = true; });
 $('bench').addEventListener('click', (e) => { if (e.target.id === 'bench') $('bench').hidden = true; });
 $('run-bench').addEventListener('click', runBench);
 
+// ---- synthesis: unlock at 10/10, then fuse into one end-to-end system ----
+async function loadSynthStatus() {
+  const grid = $('synth-progress'), btn = $('run-synth'), gate = $('synth-gate');
+  if (!apiUp) {
+    grid.innerHTML = '<div class="muted small">Synthesis reads saved passing designs from the database — run the Python backend (<b>bci serve</b>) to use it.</div>';
+    btn.disabled = true; gate.textContent = 'backend only'; return;
+  }
+  try {
+    const r = await fetch(API + '/api/synthesis', { signal: AbortSignal.timeout(8000) });
+    const st = await r.json();
+    const pct = Math.round(100 * st.solved_count / st.total);
+    grid.innerHTML =
+      `<div class="synth-meter"><i style="width:${pct}%"></i></div>` +
+      `<div class="synth-grid">${TOPIC_IDS.map((tid) => {
+        const on = !!(st.solved && st.solved[tid]);
+        return `<div class="synth-row ${on ? 'on' : ''}"><span class="dot ${on ? 'on' : 'off'}">${on ? '✓' : ''}</span>` +
+               `<span class="nm">${esc(TOPICS[tid].title)}</span></div>`;
+      }).join('')}</div>`;
+    btn.disabled = !st.complete;
+    gate.textContent = st.complete ? '✓ all 10 passing — ready to synthesize'
+      : `🔒 ${st.solved_count}/${st.total} solved — pass all 10 to unlock`;
+  } catch {
+    grid.innerHTML = '<div class="muted small">could not load progress</div>'; btn.disabled = true;
+  }
+}
+
+function renderSynthResult(res) {
+  if (res.error) return `<div class="muted small" style="margin-top:1rem">🔒 ${esc(res.error)}</div>`;
+  const s = res.system || {};
+  const phases = (res.pipeline || []).map((ph) =>
+    `<div class="phase"><h5>${esc(ph.phase)}</h5><div class="phase-why">${esc(ph.why)}</div>` +
+    ph.stages.map((st) => {
+      const parts = (st.parts || []).slice(0, 2).map((p) => esc(p.name)).join(' · ');
+      return `<div class="snode"><div class="st">${esc(st.title)}</div><div class="sr">${esc(st.role)}</div>` +
+             (parts ? `<div class="sp">${parts}</div>` : '') + `</div>`;
+    }).join('') + `</div>`).join('<div class="arrow">→</div>');
+  const how = (s.how_it_works || []).map((x) => `<li>${esc(x)}</li>`).join('');
+  const bom = (res.bill_of_materials || []).map((p) =>
+    `<div class="bi"><span><b>${esc(p.name)}</b> — ${esc(p.role || '')}</span><span class="ph">${esc(p.phase)}</span></div>`).join('');
+  const safety = res.safety && res.safety.title
+    ? `<div class="muted small" style="margin:.4rem 0">🛡 Safety envelope: <b>${esc(res.safety.title)}</b> keeps intensity, mechanical index, and viral dose within limits across the whole chain.</div>` : '';
+  return `<div class="sys-name">${esc(s.system_name || 'End-to-End System')}</div>` +
+    `<div class="sys-over">${esc(s.overview || '')}</div>` +
+    `<div class="schematic"><span class="safety-tag">🛡 Human-safety envelope · whole chain</span><div class="flow">${phases}</div></div>` +
+    (s.integration_notes ? `<div class="muted small">${esc(s.integration_notes)}</div>` : '') + safety +
+    `<div class="id-sec how"><h4>How it works — end to end</h4><ol>${how}</ol></div>` +
+    `<div class="id-sec"><h4>Bill of materials (${(res.bill_of_materials || []).length} parts)</h4><div class="bom">${bom}</div></div>` +
+    ((s.open_risks && s.open_risks.length) ? `<div class="id-sec"><h4>Open risks</h4><ul>${s.open_risks.map((r) => `<li>${esc(r)}</li>`).join('')}</ul></div>` : '') +
+    `<div class="mono small muted" style="margin-top:.5rem">built via ${esc(s.engine || 'template')} · ${res.total} blockers fused</div>`;
+}
+
+async function runSynthesize() {
+  const btn = $('run-synth'), box = $('synth-result');
+  btn.disabled = true; box.innerHTML = '<div class="muted small" style="margin-top:1rem">🧬 fusing the 10 solved designs into one system…</div>';
+  try {
+    const r = await fetch(API + '/api/synthesize', { method: 'POST', signal: AbortSignal.timeout(600000) });
+    box.innerHTML = renderSynthResult(await r.json());
+  } catch (e) {
+    box.innerHTML = `<div class="muted small" style="margin-top:1rem">failed (${esc(e.name || 'error')})</div>`;
+  }
+  btn.disabled = false;
+}
+
+$('open-synth').addEventListener('click', () => { $('synth').hidden = false; $('synth-result').innerHTML = ''; loadSynthStatus(); });
+$('close-synth').addEventListener('click', () => { $('synth').hidden = true; });
+$('synth').addEventListener('click', (e) => { if (e.target.id === 'synth') $('synth').hidden = true; });
+$('run-synth').addEventListener('click', runSynthesize);
+
 // ---- init ----
 $('topic').value = selected;
 if ($('model')) $('model').addEventListener('change', syncEngineLabel);

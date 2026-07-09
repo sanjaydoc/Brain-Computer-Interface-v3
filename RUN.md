@@ -489,6 +489,28 @@ driving, because temperature makes the samples vary.)
 
 ---
 
+## 4 f-1. Synthesize the whole system (`bci synthesize`)
+
+The capstone. Once **all 10 blockers have a passing saved design**, fuse them into one end-to-end
+non-invasive brain-uploading system — a `Label → Read → Map → Emulate` pipeline (inside a human-safety
+envelope), the consolidated parts list, and a step-by-step "how it works."
+
+```bash
+bci synthesize            # prints the 10/10 progress + (when complete) the fused system
+bci synthesize --json     # also emit the full structured result (pipeline, BOM, schematic data)
+```
+
+It's **gated**: with fewer than 10 passing it prints the progress and stays locked
+(`🔒 Synthesize is locked — solve all 10`). In the cockpit it's the **🧬 Synthesize** button — disabled
+with an `X/10 solved` hint until every blocker passes, then it renders the schematic, the bill of
+materials, and the end-to-end walkthrough. With a local LLM wired, the integration narrative is
+model-written; otherwise a deterministic template assembles it from your saved designs.
+
+> Synthesis reads the best **passing** record per topic from the database, so solve each blocker first
+> (`bci record <topic> "…"` until it PASSes). Check progress any time with `bci synthesize`.
+
+---
+
 ## 4f. Example commands (`bci invent` / `bci record`)
 
 Format: `bci invent <topic_id> "<prompt>"` — prints the design + simulator verdict.

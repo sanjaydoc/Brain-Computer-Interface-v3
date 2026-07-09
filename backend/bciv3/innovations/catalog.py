@@ -202,8 +202,10 @@ def _make() -> dict:
                    _eval_twinsim, fidelity="estimate",
                    keywords="large-scale brain simulation",
                    guidance="real_time_factor = hardware_flops / (1e14 synapses x flops_per_syn_step x "
-                            "steps_per_biological_s) must be >= target_real_time_factor (1.0). Raise "
-                            "hardware_flops, or lower flops_per_syn_step / steps_per_biological_s."),
+                            "steps_per_biological_s) must be >= target_real_time_factor (1.0). USE THESE "
+                            "MAGNITUDES for real-time human-scale: hardware_flops ~1e21 (zettascale FLOP/s — "
+                            "NOT teraflops/1e13), a lean flops_per_syn_step ~1-10, and steps_per_biological_s "
+                            "~1000. e.g. 1e21 / (1e14 x 10 x 1000) = 1000x real-time."),
         Innovation("behavioral_verification", "Behavioural upload-verification",
                    L("virtual-env"), "software", L("physics"),
                    {"target_fidelity": 0.9},

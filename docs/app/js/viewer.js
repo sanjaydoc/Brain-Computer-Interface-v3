@@ -524,17 +524,32 @@ function renderSynthResult(res) {
     `<div class="mono small muted" style="margin-top:.5rem">built via ${esc(s.engine || 'template')} · ${res.total} blockers fused</div>`;
 }
 
+const protoById = {};       // id → full prototype record, for click-to-view
+
+function openPrototype(id) {
+  const p = protoById[id];
+  if (!p) return;
+  const when = esc(String(p.ts || '').slice(0, 19).replace('T', ' '));
+  $('synth-result').innerHTML = `<div class="eyebrow" style="margin-top:1rem">📁 Saved prototype · ${when}</div>` + renderSynthResult(p);
+  $('synth-result').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
 async function loadSynthHistory() {
   const box = $('synth-history');
   if (!box || !apiUp) { if (box) box.innerHTML = '<div class="muted small">—</div>'; return; }
   try {
-    const r = await fetch(API + '/api/syntheses?limit=10', { signal: AbortSignal.timeout(5000) });
+    const r = await fetch(API + '/api/syntheses?limit=20', { signal: AbortSignal.timeout(5000) });
     const rows = (await r.json()).syntheses || [];
+    Object.keys(protoById).forEach((k) => delete protoById[k]);
+    rows.forEach((p) => { if (p.id) protoById[p.id] = p; });
     box.innerHTML = rows.length ? rows.map((p) => {
       const sysd = p.system || {};
-      return `<div class="bench-run"><span>${esc(String(p.ts || '').slice(0, 19).replace('T', ' '))} · ${esc(sysd.system_name || 'system')}</span>` +
-             `<span>${(p.bill_of_materials || []).length} parts · ${esc(sysd.engine || '')}</span></div>`;
+      return `<div class="bench-run proto-row" data-id="${esc(p.id || '')}">` +
+             `<span>${esc(String(p.ts || '').slice(0, 19).replace('T', ' '))} · ${esc(sysd.system_name || 'system')}</span>` +
+             `<span>${(p.bill_of_materials || []).length} parts · ${esc(sysd.engine || '')} · view →</span></div>`;
     }).join('') : '<div class="muted small">no prototypes yet — synthesize one above</div>';
+    box.querySelectorAll('.proto-row').forEach((row) =>
+      row.addEventListener('click', () => openPrototype(row.dataset.id)));
   } catch { box.innerHTML = '<div class="muted small">—</div>'; }
 }
 

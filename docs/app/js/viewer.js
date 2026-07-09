@@ -600,6 +600,14 @@ function exportPrototypePdf(id) {
   w.document.open(); w.document.write(html); w.document.close();
 }
 
+// Open the server-rendered ~30-page research monograph for a prototype; it auto-triggers the
+// browser print dialog (→ Save as PDF). Requires the API (bci serve) to be up.
+function exportResearchPdf(id) {
+  if (!apiUp) { alert('Start the API (bci serve) to generate the research PDF.'); return; }
+  const w = window.open(API + '/api/research/' + encodeURIComponent(id), '_blank');
+  if (!w) alert('Pop-up blocked — allow pop-ups for this page to open the research PDF.');
+}
+
 async function loadSynthHistory() {
   const box = $('synth-history');
   if (!box || !apiUp) { if (box) box.innerHTML = '<div class="muted small">—</div>'; return; }
@@ -613,12 +621,15 @@ async function loadSynthHistory() {
       return `<div class="bench-run proto-row" data-id="${esc(p.id || '')}">` +
              `<span class="pname">${esc(String(p.ts || '').slice(0, 19).replace('T', ' '))} · ${esc(sysd.system_name || 'system')}</span>` +
              `<span class="pmeta">${(p.bill_of_materials || []).length} parts · ${esc(sysd.engine || '')} · view →</span>` +
-             `<button class="pdf" data-id="${esc(p.id || '')}" title="Download this prototype as PDF">📄 PDF</button></div>`;
+             `<button class="pdf research" data-id="${esc(p.id || '')}" title="Open the full ~30-page research monograph (print → Save as PDF)">📕 Research</button>` +
+             `<button class="pdf" data-id="${esc(p.id || '')}" title="Download a one-page prototype summary as PDF">📄 PDF</button></div>`;
     }).join('') : '<div class="muted small">no prototypes yet — synthesize one above</div>';
     box.querySelectorAll('.proto-row').forEach((row) =>
       row.addEventListener('click', () => openPrototype(row.dataset.id)));
-    box.querySelectorAll('.pdf').forEach((b) =>
+    box.querySelectorAll('.pdf:not(.research)').forEach((b) =>
       b.addEventListener('click', (e) => { e.stopPropagation(); exportPrototypePdf(b.dataset.id); }));
+    box.querySelectorAll('.pdf.research').forEach((b) =>
+      b.addEventListener('click', (e) => { e.stopPropagation(); exportResearchPdf(b.dataset.id); }));
   } catch { box.innerHTML = '<div class="muted small">—</div>'; }
 }
 

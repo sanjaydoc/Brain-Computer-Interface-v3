@@ -216,6 +216,18 @@ def do_delete_synthesis(rec_id: str) -> dict:
     return {"deleted": bciv3.store.delete_synthesis(rec_id)}
 
 
+@app.get("/api/research/{rec_id}")
+def do_research(rec_id: str):
+    """Full research-grade monograph (journal-style HTML, print-to-PDF ready) for a saved prototype.
+    Opening this URL in a browser renders the paper and triggers the print dialog (Save as PDF)."""
+    import bciv3
+    from fastapi.responses import HTMLResponse
+    rec = next((s for s in bciv3.store.list_syntheses(limit=200) if str(s.get("id")) == rec_id), None)
+    if rec is None:
+        return HTMLResponse(f"<h1>404</h1><p>No saved prototype with id {rec_id!r}.</p>", status_code=404)
+    return HTMLResponse(bciv3.research.build_html(rec, autoprint=True))
+
+
 # --- static cockpit (mounted last so /api/* always wins) ---------------------
 if DOCS.is_dir():
     @app.get("/")

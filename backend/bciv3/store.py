@@ -98,6 +98,24 @@ def list_records(topic: str | None = None, limit: int = 50) -> list[dict]:
     return rows[:int(limit)]
 
 
+def record_by_id(rec_id: str) -> dict | None:
+    """Fetch a single saved invention record by its id (across all topics), or None."""
+    if not rec_id:
+        return None
+    col = _mongo()
+    if col is not None:
+        return col.find_one({"_id": rec_id}, {"_id": 0}) or col.find_one({"id": rec_id}, {"_id": 0})
+    if not _JSONL.exists():
+        return None
+    for l in _JSONL.read_text(encoding="utf-8").splitlines():
+        if not l.strip():
+            continue
+        r = json.loads(l)
+        if r.get("id") == rec_id:
+            return r
+    return None
+
+
 def delete(rec_id: str) -> bool:
     """Remove one record by id. Returns True if something was deleted."""
     col = _mongo()

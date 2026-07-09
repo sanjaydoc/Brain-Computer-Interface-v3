@@ -181,6 +181,10 @@ select:hover { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://ww
 .proto-row .pdf { flex: 0 0 auto; margin-left: auto; border: 1px solid var(--hair); background: transparent; color: var(--ink-2);
   cursor: pointer; font-size: .68rem; font-weight: 600; padding: .12rem .4rem; border-radius: 6px; white-space: nowrap; }
 .proto-row .pdf:hover { border-color: var(--molecular); color: var(--molecular); }
+.proto-row .pdf.research { margin-left: auto; }
+.proto-row .pdf { margin-left: 0; }
+.proto-row .pdf.research + .pdf { margin-left: .35rem; }
+.proto-row .pdf.research:hover { border-color: var(--venv); color: var(--venv); }
 
 /* saved-invention number + date */
 .inv-row .num { font-family: "JetBrains Mono", monospace; font-size: .72rem; color: var(--muted); }

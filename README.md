@@ -80,6 +80,33 @@ you get the kind of invention you actually want. Both flow through to the LLM pr
 > others trade for resolution, leanness, safety margin, raw performance, or future scale. See
 > **[PROTOTYPES.md](PROTOTYPES.md)** for the exact per-topic picks and the reasoning behind each build.
 
+### 📕 Research-grade monograph per prototype (with a wet-lab plan)
+
+Every saved prototype can be exported as a **~25–30 page journal-style research paper** — the document
+an actual lab would work from. Each *Saved prototypes* row has a **📕 Research** button next to **📄 PDF**:
+
+![Each saved prototype exports a one-page summary (PDF) or a full research monograph (Research)](docs/media/research_button.png)
+
+The monograph is generated server-side (`GET /api/research/{id}`) and opens print-ready in the browser
+(→ *Save as PDF*). It is written in proper **IMRaD** form — structured abstract, numbered sections,
+governing equations, per-blocker prior-art/gap analysis, and Vancouver references — and **every number is
+a value the law simulator actually accepted**, with the document explicitly framed as an *in-silico design
+study* for real experimental follow-up.
+
+![Research monograph — title, structured abstract, and the prior-art/gap table](docs/media/research_paper.png)
+
+For each of the ten blockers the paper gives the objective, the governing model, the design and its
+accepted parameters, a **computed figure** showing the set-points clearing the threshold, a worked
+quantitative check, materials, an experimental protocol, failure modes, and an expected empirical
+benchmark. It closes with an integrated interface budget, a **stage-gated translational roadmap**
+(TRL 2 → first-in-human), a discussion with a sensitivity ranking, and limitations.
+
+**Wet-lab program.** §5.1 lists **one concrete experiment per module (E1–E10)** — the experiment to run,
+the model system, the primary readout, and the quantitative success criterion — mapped to that
+prototype's actual modules and ordered to de-risk the hardest couplings (barcoding and deep read) first:
+
+![Per-module wet-lab and validation experiments (E1–E10) with model system, readout, and success criteria](docs/media/research_wetlab.png)
+
 ![A real local-Qwen invention, read in full](docs/media/llm_invention.png)
 
 > **A real invention from local Qwen** (`bci record snr_depth "focused ultrasound, deep cortex,
@@ -119,7 +146,7 @@ you get the kind of invention you actually want. Both flow through to the LLM pr
 - ✅ **Invent → simulate → refine loop** — failures feed the limiting number back to the engine.
 - ✅ **Candidate ranking** — one design per lens, ordered by simulated score (an idea tournament).
 - ✅ **Honest fidelity flags** — a pass means *physically admissible*, never *proven in a living brain*.
-- ✅ **29 tests, deterministic** — the whole pipeline runs offline in CI.
+- ✅ **34 tests, deterministic** — the whole pipeline runs offline in CI.
 - ✅ **Cockpit GUI** — v1's theme + cockpit view; pick a topic, invent, and watch the law simulator grade it live in the browser.
 - ✅ **Thin FastAPI backend** — the cockpit calls the Python engine (and your local Qwen) live; auto-detected, graceful browser fallback.
 - ✅ **`.env` config** — paste `LOCAL_LLM_URL` / `LOCAL_LLM_MODEL` / `NVIDIA_API_KEY` once (zero-dependency loader, git-ignored).
@@ -129,6 +156,9 @@ you get the kind of invention you actually want. Both flow through to the LLM pr
 - ✅ **Literature grounding** — searches **PubMed · arXiv · USPTO · PubChem · GitHub · SearXNG · Wikipedia** and invents from the retrieved prior art; citations are stored with the record.
 - ✅ **Benchmark** — `bci bench` sweeps topics × N samples → pass-rate + mean-score leaderboard per category (A-B models), saved to the DB.
 - ✅ **Synthesize** — once all 10 blockers have a **passing** design, fuse them into one **end-to-end brain-uploading system**: a schematic of the whole `Label → Read → Map → Emulate` pipeline (inside a human-safety envelope), the consolidated parts list, and how it works. The button unlocks only at 10/10.
+- ✅ **Mix-and-match prototypes + 6 curated presets** — hand-pick which invention feeds each of the 10 stages from per-topic dropdowns, or build a ready-made coherent combination in one command (`bci synthesize --preset echo|lumen|swift|guardian|titan|vanguard`). Every run is saved to the `syntheses` table as a reusable prototype.
+- ✅ **Research-grade monograph per prototype** — a **📕 Research** button (and `GET /api/research/{id}`) renders any saved prototype as a ~25–30 page **journal-style paper**: structured abstract, governing equations, per-blocker sections with computed figures + worked derivations, an integrated interface budget, a stage-gated translational roadmap, discussion, and Vancouver references — print-ready to *Save as PDF*.
+- ✅ **Per-prototype wet-lab plan** — §5.1 of the monograph gives **one concrete experiment per module (E1–E10)** with model system, primary readout, and quantitative success criterion, mapped to that prototype's actual modules.
 - ⬜ **Amber topics as full estimators** — richer models for assembly / twin-sim at scale (Phase 4).
 
 ---

@@ -25,8 +25,12 @@ async function probeApi() {
 
 // The chosen LLM model, or '' to use the backend/.env default. Auto-detected from the provider.
 const modelVal = () => ($('model') && $('model').value) || '';
-// The approach constraint: 'noninvasive' (biomolecules) | 'invasive' (electrodes).
-const constraintVal = () => ($('constraint') && $('constraint').value) || 'noninvasive';
+// The approach constraint: 'noninvasive' (biomolecules) | 'invasive' (electrodes) | '' (n/a).
+const constraintVal = () => ($('constraint') ? $('constraint').value : 'noninvasive');
+// Recommended constraint for a topic: software/data topics don't interface with the brain, so the
+// non-invasive/invasive distinction doesn't apply ('' = not applicable); everything else defaults
+// to non-invasive (this is a non-invasive brain-mapping program).
+const recommendedConstraint = (tid) => ((TOPICS[tid] && TOPICS[tid].domain) === 'software' ? '' : 'noninvasive');
 
 async function loadModels() {
   const sel = $('model'), lbl = $('model-lbl'), hint = $('model-hint');
@@ -153,7 +157,7 @@ async function runOne(tid, { save = false } = {}) {
       const r = await fetch(API + ep, {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ topic: tid, prompt: $('prompt').value, lens: $('lens').value,
-                               backend: 'auto', model: modelVal() || null, constraint: constraintVal(),
+                               backend: 'auto', model: modelVal() || null, constraint: constraintVal() || null,
                                ground: $('ground') ? $('ground').checked : false }),
         signal: AbortSignal.timeout(180000),
       });
@@ -254,6 +258,7 @@ async function inventSelected() {
 function showReady(tid) {
   selected = tid;
   const t = TOPICS[tid];
+  if ($('constraint')) $('constraint').value = recommendedConstraint(tid);   // auto-pick per topic
   $('v-title').textContent = t.title;
   const pass = $('v-pass'); pass.textContent = '—'; pass.className = 'pill';
   $('v-fid').textContent = t.fidelity;
@@ -297,7 +302,7 @@ async function tournament() {
       const r = await fetch(API + '/api/rank', {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ topic: tid, prompt: $('prompt').value, backend: 'auto',
-                               n_lenses: nLenses, model: modelVal() || null, constraint: constraintVal() }),
+                               n_lenses: nLenses, model: modelVal() || null, constraint: constraintVal() || null }),
         signal: AbortSignal.timeout(180000),
       });
       const d = await r.json();

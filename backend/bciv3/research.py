@@ -447,7 +447,7 @@ def build_html(synth: dict, autoprint: bool = True) -> str:
     B.append(f'''<div class="titleblock">
  <div class="journal">BCI v3 · Computational Neuroengineering Preprint Series</div>
  <h1 class="ptitle">{_esc(name)}: An In-Silico, Law-Constrained Design for a Non-Invasive Whole-Brain Mapping and Emulation System</h1>
- <div class="authors">S. Anbu<sup>1</sup> · BCI v3 Invention-and-Simulation Engine<sup>2</sup></div>
+ <div class="authors">Sanjay Anbu<sup>1</sup> · BCI v3 Invention-and-Simulation Engine<sup>2</sup></div>
  <div class="affil"><sup>1</sup>Principal investigator, independent research. <sup>2</sup>Automated invention/critique pipeline (retrieval, generative design, multi-domain law simulator).</div>
  <div class="corr">Correspondence: dr.sanjayanbu@gmail.com · Prototype {_esc(pid)} · {_esc(ts)} · Preprint — not peer-reviewed</div>
 </div>

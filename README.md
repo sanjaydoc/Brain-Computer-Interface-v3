@@ -60,6 +60,13 @@ you get the kind of invention you actually want. Both flow through to the LLM pr
 > `Label → Read → Map → Emulate` pipeline wrapped in a human-safety envelope, plus the consolidated
 > bill of materials and a step-by-step "how it works." Ten solved problems → one complete system.
 
+![Synthesize unlocked at 10/10, with a saved prototype library](docs/media/synthesize_panel.png)
+
+> **10/10 → unlocked, and every synthesis is saved as a prototype.** Each `synthesize` run is stored in
+> the `syntheses` table (MongoDB · JSONL fallback), so you build a **library of prototypes** — listed
+> under *Saved prototypes* (and `bci synthesize --history`), each clickable to reopen its full schematic.
+> Improve a blocker's design, re-synthesize, and compare systems over time.
+
 ![A real local-Qwen invention, read in full](docs/media/llm_invention.png)
 
 > **A real invention from local Qwen** (`bci record snr_depth "focused ultrasound, deep cortex,

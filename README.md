@@ -267,7 +267,7 @@ pip install -e "backend[api,db]"                  # install: api = cockpit serve
 
 > **Extras:** `api` (cockpit server) and `db` (MongoDB driver) are all you need to run. To also run
 > the tests and the matplotlib scorecard, add `dev,plot`:
-> `pip install -e "backend[dev,plot,api,db]"`, then verify with `python -m pytest backend -q` → **29 passed**.
+> `pip install -e "backend[dev,plot,api,db]"`, then verify with `python -m pytest backend -q` → **34 passed**.
 
 ### 2 · Run the app — from the **repo root** (no `cd`, no activation)
 
@@ -281,6 +281,34 @@ cd Brain-Computer-Interface-v3                   # ← the repo root
 ```
 
 The launchers find the venv for you (flags pass through: `.\serve.ps1 --port 9000`).
+
+### 2b · Wire the local LLM — **Ollama + Qwen** (optional but recommended)
+
+Without a local model the cockpit still runs on the deterministic browser proposer. For *real* LLM
+inventions, install **[Ollama](https://ollama.com/download)**, pull a Qwen model, and point the engine at it.
+
+```bash
+# 1) pull a model (7B is the recommended default; 3B is faster on small GPUs)
+ollama pull qwen2.5:7b        # recommended — clean JSON, good inventions
+ollama pull qwen2.5:3b        # optional — lighter / faster fallback
+
+# 2) start the Ollama server (leave it running)
+ollama serve                  # serves the OpenAI-compatible API on http://localhost:11434
+
+# 3) warm the model once so the first invention isn't slow
+ollama run qwen2.5:7b "hello"
+```
+
+Then tell BCI which model to use. Put this in **`backend/.env`** (created once, git-ignored):
+
+```ini
+LOCAL_LLM_URL=http://localhost:11434/v1
+LOCAL_LLM_MODEL=qwen2.5:7b
+```
+
+Verify it's wired: `bci ping` (one tiny timed call — confirms the model works and how fast) and
+`bci health` (shows the active provider). To A-B models per run, pass `--model`:
+`bci invent snr_depth "deep, safe" --model qwen2.5:3b`. Full LLM troubleshooting → **[RUN.md](RUN.md)**.
 
 ### 3 · The `bci` commands — **activate the venv once, then run from anywhere**
 

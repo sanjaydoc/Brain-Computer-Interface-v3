@@ -633,8 +633,10 @@ function exportPrototypePdf(id) {
 // Open the server-rendered ~30-page research monograph for a prototype; it auto-triggers the
 // browser print dialog (→ Save as PDF). Requires the API (bci serve) to be up.
 function exportResearchPdf(id) {
-  if (!apiUp) { alert('Start the API (bci serve) to generate the research PDF.'); return; }
-  const w = window.open(API + '/api/research/' + encodeURIComponent(id), '_blank');
+  // live backend renders it on the fly; otherwise open the pre-rendered static monograph (GitHub Pages)
+  const url = apiUp ? (API + '/api/research/' + encodeURIComponent(id))
+                    : ('../data/research/' + encodeURIComponent(id) + '.html');
+  const w = window.open(url, '_blank');
   if (!w) alert('Pop-up blocked — allow pop-ups for this page to open the research PDF.');
 }
 
@@ -652,9 +654,10 @@ async function loadSynthHistory() {
   try {
     Object.keys(protoById).forEach((k) => delete protoById[k]);
     rows.forEach((p) => { if (p.id) protoById[p.id] = p; });
-    // the Research monograph is server-rendered — only offer it when a backend is live
-    const researchBtn = (id) => apiUp
-      ? `<button class="pdf research" data-id="${esc(id)}" title="Open the full ~30-page research monograph (print → Save as PDF)">📕 Research</button>` : '';
+    // the Research monograph is server-rendered live (bci serve) or a pre-rendered static file
+    // committed to the repo (docs/data/research/<id>.html) — offer it either way.
+    const researchBtn = (id) =>
+      `<button class="pdf research" data-id="${esc(id)}" title="Open the full ~30-page research monograph (print → Save as PDF)">📕 Research</button>`;
     box.innerHTML = rows.length ? rows.map((p) => {
       const sysd = p.system || {};
       return `<div class="bench-run proto-row" data-id="${esc(p.id || '')}">` +

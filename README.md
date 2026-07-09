@@ -53,6 +53,8 @@ you get the kind of invention you actually want. Both flow through to the LLM pr
 </tr>
 </table>
 
+![Synthesize — the 10 solved blockers fused into one end-to-end brain-uploading system](docs/media/synthesis.png)
+
 > **The capstone — 🧬 Synthesize.** When all 10 blockers have a **passing** design, the button unlocks
 > and fuses them into one **end-to-end non-invasive brain-uploading system**: a schematic of the whole
 > `Label → Read → Map → Emulate` pipeline wrapped in a human-safety envelope, plus the consolidated
@@ -64,6 +66,14 @@ you get the kind of invention you actually want. Both flow through to the LLM pr
 > the `syntheses` table (MongoDB · JSONL fallback), so you build a **library of prototypes** — listed
 > under *Saved prototypes* (and `bci synthesize --history`), each clickable to reopen its full schematic.
 > Improve a blocker's design, re-synthesize, and compare systems over time.
+
+![A real local-Qwen invention, read in full](docs/media/llm_invention.png)
+
+> **A real invention from local Qwen** (`bci record snr_depth "focused ultrasound, deep cortex,
+> low thermal dose, safe"`) — the biomimicry lens turned an eardrum into a focused-ultrasound
+> transducer array. Every invention is captured in full: mechanism, the law simulator's per-domain
+> read (biophysics · physics · electronics · biology), proposed parameters, materials, protocol,
+> parts, assumptions, and risks — click any saved invention to read it like this.
 
 ![Invented designs graded by the law simulator](docs/media/scorecard.png)
 

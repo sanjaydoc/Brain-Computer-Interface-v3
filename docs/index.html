@@ -1,0 +1,211 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Brain-Computer-Interface v3 — an invention engine for non-invasive brain uploading</title>
+<meta name="description" content="A retrieval-grounded invention engine paired with a law-based simulator that grades every design against biophysics, physics, electronics, and FDA safety limits — targeting the ten missing-link blockers to a working non-invasive brain-computer interface.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/theme.css">
+<style>
+  /* page-local layout on top of the shared design system */
+  .hero { padding: 84px 0 64px; }
+  .hero .eyebrow { margin-bottom: 1rem; }
+  .hero h1 { max-width: 16ch; }
+  .hero p.lede { font-size: 1.2rem; color: var(--ink-2); max-width: 60ch; margin-top: 1.2rem; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: .7rem; margin-top: 1.8rem; }
+  .statgrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 3rem;
+    border-top: 1.5px solid var(--rule); border-bottom: 1.5px solid var(--rule); }
+  .statgrid > div { padding: 1.2rem 1rem; border-right: 1px solid var(--hair); }
+  .statgrid > div:last-child { border-right: 0; }
+  .statgrid .n { font-family: var(--serif); font-size: 2rem; line-height: 1; color: var(--ink); }
+  .statgrid .l { font-size: .74rem; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-top: .4rem; }
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: center; }
+  .grid3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+  .blockers { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 28px; margin-top: 1.5rem; }
+  .blocker { display: flex; gap: .7rem; padding: .5rem 0; border-bottom: 1px solid var(--hair); }
+  .blocker .num { font-family: "JetBrains Mono", monospace; font-size: .78rem; color: var(--faint); padding-top: .15rem; min-width: 1.6rem; }
+  .blocker .t { font-weight: 700; font-size: .96rem; }
+  .blocker .d { font-size: .84rem; color: var(--muted); }
+  figure.shot { margin: 0; border: 1px solid var(--hair); border-radius: var(--radius); overflow: hidden; box-shadow: var(--shadow); background: var(--paper); }
+  figure.shot img { width: 100%; display: block; }
+  figure.shot figcaption { font-size: .8rem; color: var(--muted); padding: .6rem .9rem; border-top: 1px solid var(--hair); }
+  .steps { counter-reset: step; display: grid; gap: 14px; margin-top: 1.4rem; }
+  .step { display: flex; gap: 1rem; }
+  .step .k { counter-increment: step; font-family: var(--serif); font-size: 1.5rem; color: var(--molecular); min-width: 2rem; }
+  .step .k::before { content: counter(step); }
+  .preset { border: 1px solid var(--hair); border-radius: var(--radius-sm); padding: 14px 16px; background: var(--paper); box-shadow: var(--shadow-sm); }
+  .preset .pn { font-weight: 800; letter-spacing: .02em; }
+  .preset .pd { font-size: .84rem; color: var(--muted); margin-top: .25rem; }
+  .lead { font-size: 1.05rem; color: var(--ink-2); max-width: 62ch; }
+  .kicker { color: var(--molecular); font-weight: 700; }
+  footer.site { padding: 40px 0; color: var(--muted); font-size: .86rem; }
+  footer.site .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1rem; }
+  @media (max-width: 820px){ .grid2,.grid3,.blockers,.statgrid{ grid-template-columns: 1fr; } .statgrid>div{ border-right:0; border-bottom:1px solid var(--hair);} }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="wrap">
+    <a class="brand" href="#top">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" style="color:var(--molecular)"><circle cx="12" cy="12" r="3"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4M5 5l2.5 2.5M16.5 16.5 19 19M19 5l-2.5 2.5M7.5 16.5 5 19"/></svg>
+      BCI <span class="muted" style="font-weight:600">v3</span>
+    </a>
+    <div class="nav-links">
+      <a href="#blockers">The 10 blockers</a>
+      <a href="#pipeline">Pipeline</a>
+      <a href="#research">Research</a>
+      <a href="https://github.com/sanjaydoc/Brain-Computer-Interface-v3">GitHub</a>
+      <a class="btn btn-sm" href="app/">Launch cockpit →</a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<header id="top" class="section hero">
+  <div class="wrap">
+    <div class="eyebrow">Invention engine · law-based simulator · non-invasive brain uploading</div>
+    <h1>Invent the ten missing links to a working brain–computer interface.</h1>
+    <p class="lede">BCI v3 is a retrieval-grounded <b>invention engine</b> paired with a <b>law-based simulator</b>.
+      It proposes designs for the ten hardest unsolved problems between a living brain and a verified digital
+      twin — then grades every one against real biophysics, wave physics, information theory, and FDA safety
+      limits. A design passes <em>only if the physics permits it</em>.</p>
+    <div class="cta-row">
+      <a class="btn" href="app/">Launch the cockpit →</a>
+      <a class="btn ghost" href="https://github.com/sanjaydoc/Brain-Computer-Interface-v3">View on GitHub</a>
+    </div>
+    <div class="statgrid">
+      <div><div class="n">10</div><div class="l">missing-link blockers</div></div>
+      <div><div class="n">75&nbsp;mm</div><div class="l">non-invasive read depth</div></div>
+      <div><div class="n">10¹⁴</div><div class="l">synapses targeted</div></div>
+      <div><div class="n">34</div><div class="l">deterministic tests</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- WHY -->
+<section class="section" id="why">
+  <div class="wrap">
+    <div class="eyebrow">Why this exists</div>
+    <h2>Progress is blocked by ten problems that must be solved together.</h2>
+    <p class="lead" style="margin-top:1rem">A non-invasive interface that can map and emulate a whole brain is
+      obstructed less by any single component than by whether a <b>mutually-consistent</b> set of components can
+      satisfy every constraint at once — molecular delivery, deep readout, information capacity, data assembly,
+      real-time simulation, and human safety. BCI v3 makes that search concrete: it invents candidate solutions,
+      grades them against the laws that govern them, and fuses the ten passing designs into one end-to-end system.</p>
+  </div>
+</section>
+
+<!-- BLOCKERS -->
+<section class="section" id="blockers">
+  <div class="wrap">
+    <div class="eyebrow">The map</div>
+    <h2>The ten blockers.</h2>
+    <div class="blockers">
+      <div class="blocker"><div class="num">01</div><div><div class="t"><span class="dot molecular"></span> Pan-neuronal delivery</div><div class="d">Label ~100% of neurons across the blood–brain barrier at a safe dose.</div></div></div>
+      <div class="blocker"><div class="num">02</div><div><div class="t"><span class="dot molecular"></span> Multiplexed reporters</div><div class="d">Give every synapse a demultiplexable molecular barcode in one voxel.</div></div></div>
+      <div class="blocker"><div class="num">03</div><div><div class="t"><span class="dot scanner"></span> In-vivo readout at depth</div><div class="d">Read barcodes non-destructively at 75 mm in a living brain.</div></div></div>
+      <div class="blocker"><div class="num">04</div><div><div class="t"><span class="dot scanner"></span> Signal boost &amp; noise cut</div><div class="d">Keep detection alive at depth by brightness and averaging, not a bigger scanner.</div></div></div>
+      <div class="blocker"><div class="num">05</div><div><div class="t"><span class="dot scanner"></span> Whole-brain throughput</div><div class="d">Read the whole brain within a 30-day budget.</div></div></div>
+      <div class="blocker"><div class="num">06</div><div><div class="t"><span class="dot template"></span> Trans-synaptic pairing</div><div class="d">Recover which pre-barcode pairs with which post-barcode at F1 ≥ 0.9.</div></div></div>
+      <div class="blocker"><div class="num">07</div><div><div class="t"><span class="dot template"></span> Exabyte assembly</div><div class="d">Assemble the connectome within bounded storage at &lt;5% error.</div></div></div>
+      <div class="blocker"><div class="num">08</div><div><div class="t"><span class="dot venv"></span> Real-time twin</div><div class="d">Simulate 10¹⁴ synapses at a real-time factor ≥ 1.</div></div></div>
+      <div class="blocker"><div class="num">09</div><div><div class="t"><span class="dot venv"></span> Behavioural verification</div><div class="d">Prove the twin behaves like the original at fidelity ≥ 0.9.</div></div></div>
+      <div class="blocker"><div class="num">10</div><div><div class="t"><span class="dot molecular"></span> Human safety envelope</div><div class="d">Hold ultrasound intensity, mechanical index, and viral dose inside FDA limits.</div></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- PIPELINE -->
+<section class="section" id="pipeline">
+  <div class="wrap">
+    <div class="eyebrow">How it works</div>
+    <h2>Invent → simulate → synthesize.</h2>
+    <div class="grid2" style="margin-top:1.6rem">
+      <div>
+        <div class="steps">
+          <div class="step"><div class="k"></div><div><b>Retrieve.</b> Search the literature (PubMed · arXiv · USPTO · Wikipedia) and ground each invention in real prior art.</div></div>
+          <div class="step"><div class="k"></div><div><b>Invent.</b> Ten creative lenses propose designs under a strict non-invasive constraint — molecules and waves, never electrodes on brain.</div></div>
+          <div class="step"><div class="k"></div><div><b>Simulate.</b> A deterministic law engine grades each design against biophysics, physics, electronics, and FDA ceilings. A persuasive narrative can never move the number — only the physics can.</div></div>
+          <div class="step"><div class="k"></div><div><b>Synthesize.</b> When all ten blockers have a passing design, fuse them into one end-to-end brain-uploading system with a schematic, parts list, and interface budget.</div></div>
+        </div>
+      </div>
+      <figure class="shot"><img src="media/cockpit.png" alt="The BCI v3 cockpit — pick a topic, invent, and watch the law simulator grade the design live"><figcaption>The cockpit: pick a blocker, invent with your local LLM, and watch the law simulator grade it live.</figcaption></figure>
+    </div>
+    <div class="grid2" style="margin-top:2.4rem">
+      <figure class="shot"><img src="media/scorecard.png" alt="Invented designs graded by the law-based simulator"><figcaption>Every design is graded by the law engine — a pass means <em>physically admissible</em>, never <em>proven in a living brain</em>.</figcaption></figure>
+      <figure class="shot"><img src="media/synthesis.png" alt="Ten solved blockers fused into one end-to-end brain-uploading system"><figcaption>Synthesize fuses the ten passing designs into one <span class="mono">Label → Read → Map → Emulate</span> system inside a safety envelope.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- PRESETS -->
+<section class="section" id="presets">
+  <div class="wrap">
+    <div class="eyebrow">Prototype library</div>
+    <h2>Mix &amp; match, or build a curated prototype in one command.</h2>
+    <p class="lead" style="margin-top:1rem">Hand-pick which invention feeds each of the ten stages, or use one of six ready-made, internally-coherent presets. Every build is saved as a reusable prototype.</p>
+    <div class="grid3" style="margin-top:1.6rem">
+      <div class="preset"><div class="pn">ECHO</div><div class="pd">Fully-acoustic coherent flagship — one readout physics end-to-end.</div></div>
+      <div class="preset"><div class="pn">LUMEN</div><div class="pd">Optical / highest-resolution — fluorescence paradigm, 5 µm voxels.</div></div>
+      <div class="preset"><div class="pn">SWIFT</div><div class="pd">Lean / fast — fewest reads, least averaging, max scan parallelism.</div></div>
+      <div class="preset"><div class="pn">GUARDIAN</div><div class="pd">Clinical-safety-first — lowest intensity &amp; dose, most rigorous verification.</div></div>
+      <div class="preset"><div class="pn">TITAN</div><div class="pd">Maximum performance — highest raw scores across the board.</div></div>
+      <div class="preset"><div class="pn">VANGUARD</div><div class="pd">Future / most-scalable — 2050-forward, novel-modality picks.</div></div>
+    </div>
+    <pre style="margin-top:1.6rem"><code>bci synthesize --preset echo      <span style="color:#8a8a92"># or lumen | swift | guardian | titan | vanguard</span>
+bci synthesize --list-presets     <span style="color:#8a8a92"># show all six</span></code></pre>
+  </div>
+</section>
+
+<!-- RESEARCH -->
+<section class="section" id="research">
+  <div class="wrap">
+    <div class="eyebrow">From prototype to paper</div>
+    <h2>A research-grade monograph for every prototype — with a wet-lab plan.</h2>
+    <p class="lead" style="margin-top:1rem">Any saved prototype exports as a ~25–30 page journal-style paper: structured abstract, governing equations, per-blocker sections with computed figures, an integrated interface budget, a stage-gated translational roadmap, and a <b>per-module wet-lab experiment program</b>. Every number is a value the law simulator actually accepted — the document a lab would work from.</p>
+    <div class="grid2" style="margin-top:1.8rem">
+      <figure class="shot"><img src="media/research_paper.png" alt="Research monograph — title, structured abstract, and prior-art/gap table"><figcaption>Journal-style monograph: structured abstract, prior-art gap analysis, governing equations.</figcaption></figure>
+      <figure class="shot"><img src="media/research_wetlab.png" alt="Per-module wet-lab and validation experiments E1–E10 with model system, readout, and success criteria"><figcaption>Per-module wet-lab program (E1–E10): experiment, model system, primary readout, success criterion.</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<!-- RUN -->
+<section class="section" id="run">
+  <div class="wrap">
+    <div class="eyebrow">Run it</div>
+    <h2>One command. Your machine. Your local LLM.</h2>
+    <p class="lead" style="margin-top:1rem">Local-LLM-first (Qwen via Ollama), with NVIDIA NIM and a rule-based fallback that needs no LLM at all. MongoDB for storage, JSONL when it's down.</p>
+    <pre style="margin-top:1.4rem"><code>pip install -e backend
+bci serve                 <span style="color:#8a8a92"># cockpit + API on one port → http://localhost:8000/app/</span>
+bci record multiplexed_reporters "acoustic, deep, safe" --constraint noninvasive
+bci synthesize --preset echo</code></pre>
+    <div class="cta-row">
+      <a class="btn" href="https://github.com/sanjaydoc/Brain-Computer-Interface-v3">Get the code →</a>
+      <a class="btn ghost" href="app/">Open the cockpit</a>
+    </div>
+  </div>
+</section>
+
+<hr class="rule">
+<footer class="site">
+  <div class="wrap">
+    <div>Brain-Computer-Interface v3 · an invention engine for non-invasive brain uploading.</div>
+    <div>
+      <a href="https://github.com/sanjaydoc/Brain-Computer-Interface-v3">GitHub</a> ·
+      <a href="app/">Cockpit</a> ·
+      <a href="https://github.com/sanjaydoc/Brain-Computer-Interface-v3/blob/main/PROTOTYPES.md">Prototypes</a>
+    </div>
+  </div>
+  <div class="wrap" style="margin-top:.6rem;color:var(--faint);font-size:.8rem">
+    Research-stage, in-silico-validated concept. A passing design is physically admissible in-model, not proven in a living human brain.
+  </div>
+</footer>
+
+</body>
+</html>

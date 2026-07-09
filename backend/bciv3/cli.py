@@ -130,6 +130,11 @@ def _bench(args) -> int:
 
 def _synthesize(args) -> int:
     import bciv3
+    if getattr(args, "list_presets", False):
+        print("prototype presets (bci synthesize --preset <name>):\n")
+        for name in bciv3.presets.names():
+            print(f"  {name:<10} {bciv3.presets.PRESET_INFO.get(name, '')}")
+        return 0
     if args.history:
         rows = bciv3.synthesis.list_prototypes(limit=args.limit)
         print(f"saved prototypes: {len(rows)}  (store: {bciv3.store.backend()})")
@@ -138,6 +143,14 @@ def _synthesize(args) -> int:
             print(f"  [{str(r.get('ts',''))[:19].replace('T',' ')}] {sysd.get('system_name','?')} "
                   f"· {len(r.get('bill_of_materials', []))} parts · id {str(r.get('id',''))[:10]}")
         return 0
+    selection = None
+    if getattr(args, "preset", None):
+        selection = bciv3.presets.get(args.preset)
+        if selection is None:
+            print(f"unknown preset {args.preset!r}. Choose from: {', '.join(bciv3.presets.names())} "
+                  "(or `bci synthesize --list-presets`).", file=sys.stderr)
+            return 1
+        print(f"preset: {args.preset}  ·  {bciv3.presets.PRESET_INFO.get(args.preset, '')}\n")
     st = bciv3.synthesis.status()
     print(f"solved: {st['solved_count']}/{st['total']} passing")
     for tid in bciv3.all_ids():
@@ -146,7 +159,7 @@ def _synthesize(args) -> int:
     if not st["complete"]:
         print(f"\n🔒 Synthesize is locked — solve all 10 (missing: {', '.join(st['missing'])}).")
         return 1
-    res = bciv3.synthesis.synthesize()
+    res = bciv3.synthesis.synthesize(selection=selection)
     sysd = res["system"]
     print(f"\n🧬 {sysd['system_name']}  (built via {sysd['engine']})  →  saved id={res.get('id')} to {bciv3.store.backend()} (syntheses)")
     print(f"\n{sysd['overview']}\n")
@@ -242,6 +255,8 @@ def main(argv=None) -> int:
     sy.add_argument("--json", action="store_true", help="also print the full structured result")
     sy.add_argument("--history", action="store_true", help="list previously saved prototypes instead of building a new one")
     sy.add_argument("--limit", type=int, default=20, help="how many past prototypes to list (with --history)")
+    sy.add_argument("--preset", default=None, help="build a curated prototype (echo|lumen|swift|guardian|titan|vanguard)")
+    sy.add_argument("--list-presets", dest="list_presets", action="store_true", help="show the curated prototype presets and exit")
     sy.set_defaults(fn=_synthesize)
 
     db = sub.add_parser("db", help="list saved inventions (or --stats)")

@@ -66,6 +66,19 @@ you get the kind of invention you actually want. Both flow through to the LLM pr
 > the `syntheses` table (MongoDB · JSONL fallback), so you build a **library of prototypes** — listed
 > under *Saved prototypes* (and `bci synthesize --history`), each clickable to reopen its full schematic.
 > Improve a blocker's design, re-synthesize, and compare systems over time.
+>
+> **Curated prototype presets.** With a rich library (several inventions per topic), the Synthesize
+> dropdowns let you hand-pick which invention feeds each of the 10 stages. Six ready-made, internally
+> **coherent** combinations ship as presets — build any with one command instead of setting 10 dropdowns:
+>
+> ```bash
+> bci synthesize --preset echo       # or lumen | swift | guardian | titan | vanguard
+> bci synthesize --list-presets      # show all six with descriptions
+> ```
+>
+> `echo` is the fully-acoustic flagship (every stage chains through ultrasound/photoacoustic); the
+> others trade for resolution, leanness, safety margin, raw performance, or future scale. See
+> **[PROTOTYPES.md](PROTOTYPES.md)** for the exact per-topic picks and the reasoning behind each build.
 
 ![A real local-Qwen invention, read in full](docs/media/llm_invention.png)
 

@@ -181,14 +181,26 @@ def do_synthesis_status() -> dict:
 
 class SynthReq(BaseModel):
     selection: dict[str, str] | None = None    # {topic: invention_id} — hand-pick per topic
+    preset: str | None = None                  # echo|lumen|swift|guardian|titan|vanguard — curated combo
+
+
+@app.get("/api/presets")
+def do_presets() -> dict:
+    """Curated prototype presets (name → {topic: invention_id}) + one-line descriptions."""
+    import bciv3
+    return {"presets": bciv3.presets.PRESETS, "info": bciv3.presets.PRESET_INFO}
 
 
 @app.post("/api/synthesize")
 def do_synthesize(req: SynthReq | None = None) -> dict:
-    """Fuse the 10 passing designs (optionally hand-picked per topic via `selection`) into one
-    end-to-end system, and SAVE it as a prototype in the `syntheses` table."""
+    """Fuse the 10 passing designs into one end-to-end system, and SAVE it as a prototype in the
+    `syntheses` table. Pick the per-topic inventions via `selection` ({topic: id}) or a named
+    `preset` (selection wins if both are given)."""
     import bciv3
-    return bciv3.synthesis.synthesize(selection=(req.selection if req else None))
+    selection = None
+    if req:
+        selection = req.selection or (bciv3.presets.get(req.preset) if req.preset else None)
+    return bciv3.synthesis.synthesize(selection=selection)
 
 
 @app.get("/api/syntheses")

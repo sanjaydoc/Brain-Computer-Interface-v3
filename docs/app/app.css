@@ -139,7 +139,40 @@ select:hover { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://ww
 
 @media (max-width: 860px) {
   .stage { grid-template-columns: 1fr; height: auto; }
-  .viewer { height: 60vh; } .aside { border-left: 0; border-top: 1px solid var(--hair); }
+  /* the two control panels are absolutely positioned over the chart on desktop; on a phone
+     that overlaps — flow them as stacked full-width cards and drop the decorative canvas. */
+  .viewer { height: auto; overflow: visible; display: flex; flex-direction: column;
+    gap: 12px; padding: 12px; background: var(--paper-2); }
+  #chart { display: none; }
+  .overlay { position: static; width: auto !important; max-height: none !important;
+    backdrop-filter: none; background: var(--paper); }
+  .overlay.controls, .overlay.verdict { top: auto; left: auto; right: auto; }
+  .aside { border-left: 0; border-top: 1px solid var(--hair); }
+}
+/* nav chips: let them scroll horizontally instead of overflowing the viewport on small screens */
+@media (max-width: 640px) {
+  .nav .wrap { gap: .5rem; }
+  .nav-links { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  .nav-links::-webkit-scrollbar { display: none; }
+  .nav-links > * { flex: 0 0 auto; }
+
+  /* Modals: on phones the grid's place-items:center sizes the card to its content's max width,
+     so a wide row pushes the whole card off-screen. Make them full-screen sheets (stretch, not
+     center) so the card width is fixed to the viewport, then wrap/scroll wide inner content. */
+  .modal { padding: 0; place-items: stretch; }
+  .modal-card { max-width: 100%; width: 100%; min-height: 100%; max-height: 100vh;
+    border-radius: 0; padding: 1rem 1rem 2rem; }
+  .modal-close { position: sticky; top: -.2rem; z-index: 2; }
+  /* prototype / benchmark rows: wrap instead of overflowing */
+  .bench-run { flex-wrap: wrap; gap: .15rem .5rem; }
+  .bench-run .pname, .bench-run .pmeta { flex: 1 1 100%; }
+  .proto-row .pdf { margin-top: .2rem; }
+  /* dense saved-invention rows: tighten so all six columns fit */
+  .inv-row { gap: .35rem; font-size: .78rem; }
+  .inv-row .dt { font-size: .64rem; }
+  /* the synthesize schematic is intentionally wide — let it scroll inside the card, not the page */
+  .schematic { overflow-x: auto; }
+  .synth-history { overflow-x: hidden; }
 }
 
 /* ── synthesis: progress table, gated button, end-to-end schematic ── */

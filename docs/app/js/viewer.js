@@ -13,6 +13,18 @@ let selected = TOPIC_IDS[0];
 const API = localStorage.getItem('bciv3_api') || location.origin;
 let apiUp = false, apiProvider = null;
 
+// Static repo-data fallback: when no backend is running (e.g. GitHub Pages), the cockpit reads a
+// committed snapshot of the library from ../data/*.json so the demo shows real inventions & prototypes.
+const _staticCache = {};
+async function loadStatic(name) {
+  if (name in _staticCache) return _staticCache[name];
+  try {
+    const r = await fetch('../data/' + name + '.json', { signal: AbortSignal.timeout(8000) });
+    _staticCache[name] = r.ok ? await r.json() : null;
+  } catch { _staticCache[name] = null; }
+  return _staticCache[name];
+}
+
 async function probeApi() {
   try {
     const r = await fetch(API + '/api/health', { signal: AbortSignal.timeout(1200) });
@@ -332,11 +344,18 @@ async function loadGroups() {
       if (d.groups) return { groups: d.groups, store: d.store };
     } catch { apiUp = false; }
   }
-  const all = JSON.parse(localStorage.getItem('bciv3_saved') || '[]');
+  // static repo snapshot (GitHub Pages / offline) — merge any locally-invented records on top
+  const stat = await loadStatic('inventions');
   const groups = {}; TOPIC_IDS.forEach((t) => (groups[t] = []));
+  let store = 'browser (localStorage)';
+  if (stat && stat.groups) {
+    TOPIC_IDS.forEach((t) => { groups[t] = (stat.groups[t] || []).slice(); });
+    store = stat.store || 'repo data (static)';
+  }
+  const all = JSON.parse(localStorage.getItem('bciv3_saved') || '[]');
   all.forEach((r) => (groups[r.topic] = groups[r.topic] || []).push(r));
-  TOPIC_IDS.forEach((t) => groups[t].sort((a, b) => b.score.score - a.score.score));
-  return { groups, store: 'browser (localStorage)' };
+  TOPIC_IDS.forEach((t) => groups[t].sort((a, b) => (b.score?.score || 0) - (a.score?.score || 0)));
+  return { groups, store };
 }
 
 const savedById = {};       // id → full record, for the click-to-read detail view
@@ -478,8 +497,19 @@ $('run-bench').addEventListener('click', runBench);
 async function loadSynthStatus() {
   const grid = $('synth-progress'), btn = $('run-synth'), gate = $('synth-gate');
   if (!apiUp) {
-    grid.innerHTML = '<div class="muted small">Synthesis reads saved passing designs from the database — run the Python backend (<b>bci serve</b>) to use it.</div>';
-    btn.disabled = true; gate.textContent = 'backend only'; return;
+    const protos = await loadStatic('syntheses');
+    if (protos && protos.length) {
+      grid.innerHTML =
+        `<div class="synth-meter"><i style="width:100%"></i></div>` +
+        `<p class="muted small" style="margin:.4rem 0">All 10 blockers have a passing design in this repo snapshot. ` +
+        `Browse the pre-built prototypes below — each is clickable, with a PDF export. ` +
+        `To fuse a <b>new</b> combination live, run the Python backend (<code>bci serve</code>).</p>`;
+      btn.disabled = true; gate.textContent = '✓ 10/10 · demo prototypes (read-only)';
+    } else {
+      grid.innerHTML = '<div class="muted small">Synthesis reads saved passing designs from the database — run the Python backend (<b>bci serve</b>) to use it.</div>';
+      btn.disabled = true; gate.textContent = 'backend only';
+    }
+    return;
   }
   try {
     const r = await fetch(API + '/api/synthesis', { signal: AbortSignal.timeout(8000) });
@@ -610,18 +640,27 @@ function exportResearchPdf(id) {
 
 async function loadSynthHistory() {
   const box = $('synth-history');
-  if (!box || !apiUp) { if (box) box.innerHTML = '<div class="muted small">—</div>'; return; }
+  if (!box) return;
+  let rows = [];
+  if (apiUp) {
+    try {
+      const r = await fetch(API + '/api/syntheses?limit=20', { signal: AbortSignal.timeout(5000) });
+      rows = (await r.json()).syntheses || [];
+    } catch { apiUp = false; }
+  }
+  if (!apiUp) rows = (await loadStatic('syntheses')) || [];    // repo snapshot on GitHub Pages / offline
   try {
-    const r = await fetch(API + '/api/syntheses?limit=20', { signal: AbortSignal.timeout(5000) });
-    const rows = (await r.json()).syntheses || [];
     Object.keys(protoById).forEach((k) => delete protoById[k]);
     rows.forEach((p) => { if (p.id) protoById[p.id] = p; });
+    // the Research monograph is server-rendered — only offer it when a backend is live
+    const researchBtn = (id) => apiUp
+      ? `<button class="pdf research" data-id="${esc(id)}" title="Open the full ~30-page research monograph (print → Save as PDF)">📕 Research</button>` : '';
     box.innerHTML = rows.length ? rows.map((p) => {
       const sysd = p.system || {};
       return `<div class="bench-run proto-row" data-id="${esc(p.id || '')}">` +
              `<span class="pname">${esc(String(p.ts || '').slice(0, 19).replace('T', ' '))} · ${esc(sysd.system_name || 'system')}</span>` +
              `<span class="pmeta">${(p.bill_of_materials || []).length} parts · ${esc(sysd.engine || '')} · view →</span>` +
-             `<button class="pdf research" data-id="${esc(p.id || '')}" title="Open the full ~30-page research monograph (print → Save as PDF)">📕 Research</button>` +
+             researchBtn(p.id) +
              `<button class="pdf" data-id="${esc(p.id || '')}" title="Download a one-page prototype summary as PDF">📄 PDF</button></div>`;
     }).join('') : '<div class="muted small">no prototypes yet — synthesize one above</div>';
     box.querySelectorAll('.proto-row').forEach((row) =>

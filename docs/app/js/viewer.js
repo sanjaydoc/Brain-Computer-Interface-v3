@@ -513,7 +513,8 @@ function renderSynthResult(res) {
     `<div class="bi"><span><b>${esc(p.name)}</b> — ${esc(p.role || '')}</span><span class="ph">${esc(p.phase)}</span></div>`).join('');
   const safety = res.safety && res.safety.title
     ? `<div class="muted small" style="margin:.4rem 0">🛡 Safety envelope: <b>${esc(res.safety.title)}</b> keeps intensity, mechanical index, and viral dose within limits across the whole chain.</div>` : '';
-  return `<div class="sys-name">${esc(s.system_name || 'End-to-End System')}</div>` +
+  const saved = res.id ? `<div class="mono small" style="color:var(--venv); margin:.3rem 0">✓ saved as prototype · id ${esc(String(res.id).slice(0, 10))}</div>` : '';
+  return saved + `<div class="sys-name">${esc(s.system_name || 'End-to-End System')}</div>` +
     `<div class="sys-over">${esc(s.overview || '')}</div>` +
     `<div class="schematic"><span class="safety-tag">🛡 Human-safety envelope · whole chain</span><div class="flow">${phases}</div></div>` +
     (s.integration_notes ? `<div class="muted small">${esc(s.integration_notes)}</div>` : '') + safety +
@@ -523,19 +524,34 @@ function renderSynthResult(res) {
     `<div class="mono small muted" style="margin-top:.5rem">built via ${esc(s.engine || 'template')} · ${res.total} blockers fused</div>`;
 }
 
+async function loadSynthHistory() {
+  const box = $('synth-history');
+  if (!box || !apiUp) { if (box) box.innerHTML = '<div class="muted small">—</div>'; return; }
+  try {
+    const r = await fetch(API + '/api/syntheses?limit=10', { signal: AbortSignal.timeout(5000) });
+    const rows = (await r.json()).syntheses || [];
+    box.innerHTML = rows.length ? rows.map((p) => {
+      const sysd = p.system || {};
+      return `<div class="bench-run"><span>${esc(String(p.ts || '').slice(0, 19).replace('T', ' '))} · ${esc(sysd.system_name || 'system')}</span>` +
+             `<span>${(p.bill_of_materials || []).length} parts · ${esc(sysd.engine || '')}</span></div>`;
+    }).join('') : '<div class="muted small">no prototypes yet — synthesize one above</div>';
+  } catch { box.innerHTML = '<div class="muted small">—</div>'; }
+}
+
 async function runSynthesize() {
   const btn = $('run-synth'), box = $('synth-result');
   btn.disabled = true; box.innerHTML = '<div class="muted small" style="margin-top:1rem">🧬 fusing the 10 solved designs into one system…</div>';
   try {
     const r = await fetch(API + '/api/synthesize', { method: 'POST', signal: AbortSignal.timeout(600000) });
     box.innerHTML = renderSynthResult(await r.json());
+    loadSynthHistory();                       // refresh the prototype library with the new one
   } catch (e) {
     box.innerHTML = `<div class="muted small" style="margin-top:1rem">failed (${esc(e.name || 'error')})</div>`;
   }
   btn.disabled = false;
 }
 
-$('open-synth').addEventListener('click', () => { $('synth').hidden = false; $('synth-result').innerHTML = ''; loadSynthStatus(); });
+$('open-synth').addEventListener('click', () => { $('synth').hidden = false; $('synth-result').innerHTML = ''; loadSynthStatus(); loadSynthHistory(); });
 $('close-synth').addEventListener('click', () => { $('synth').hidden = true; });
 $('synth').addEventListener('click', (e) => { if (e.target.id === 'synth') $('synth').hidden = true; });
 $('run-synth').addEventListener('click', runSynthesize);

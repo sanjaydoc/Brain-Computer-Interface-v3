@@ -148,6 +148,50 @@ def list_benchmarks(limit: int = 20) -> list[dict]:
     return list(reversed(rows))[:int(limit)]
 
 
+_SYNTH_JSONL = Path(os.environ.get("BCIV3_SYNTH_JSONL", "syntheses.jsonl"))
+
+
+def save_synthesis(record: dict) -> str:
+    """Persist one synthesized end-to-end system (a 'prototype') to the `syntheses` collection.
+    Every `synthesize` run is kept, so you accumulate a library of prototypes over time."""
+    rec = dict(record)
+    rec.setdefault("id", uuid.uuid4().hex)
+    col = _col("syntheses")
+    if col is not None:
+        rec["_id"] = rec["id"]
+        col.insert_one(rec)
+    else:
+        with open(_SYNTH_JSONL, "a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, default=str) + "\n")
+    return rec["id"]
+
+
+def list_syntheses(limit: int = 20) -> list[dict]:
+    """Saved prototypes, newest first."""
+    col = _col("syntheses")
+    if col is not None:
+        return list(col.find({}, {"_id": 0}).sort("ts", -1).limit(int(limit)))
+    if not _SYNTH_JSONL.exists():
+        return []
+    rows = [json.loads(l) for l in _SYNTH_JSONL.read_text(encoding="utf-8").splitlines() if l.strip()]
+    return list(reversed(rows))[:int(limit)]
+
+
+def delete_synthesis(rec_id: str) -> bool:
+    """Remove one saved prototype by id."""
+    col = _col("syntheses")
+    if col is not None:
+        return col.delete_one({"_id": rec_id}).deleted_count > 0
+    if not _SYNTH_JSONL.exists():
+        return False
+    rows = [json.loads(l) for l in _SYNTH_JSONL.read_text(encoding="utf-8").splitlines() if l.strip()]
+    keep = [r for r in rows if r.get("id") != rec_id]
+    if len(keep) == len(rows):
+        return False
+    _SYNTH_JSONL.write_text("".join(json.dumps(r, default=str) + "\n" for r in keep), encoding="utf-8")
+    return True
+
+
 def stats() -> dict:
     rows = list_records(limit=100000)
     per_topic: dict[str, dict] = {}

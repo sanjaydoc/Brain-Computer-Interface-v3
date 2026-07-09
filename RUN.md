@@ -498,7 +498,12 @@ envelope), the consolidated parts list, and a step-by-step "how it works."
 ```bash
 bci synthesize            # prints the 10/10 progress + (when complete) the fused system
 bci synthesize --json     # also emit the full structured result (pipeline, BOM, schematic data)
+bci synthesize --history  # list previously saved prototypes (newest first)
 ```
+
+Every successful `synthesize` is **saved as a prototype** to the `syntheses` table (MongoDB, JSONL
+fallback), so re-running builds a library you can browse — in the terminal with `--history`, or in the
+cockpit under **Saved prototypes** in the Synthesize panel.
 
 It's **gated**: with fewer than 10 passing it prints the progress and stays locked
 (`🔒 Synthesize is locked — solve all 10`). In the cockpit it's the **🧬 Synthesize** button — disabled

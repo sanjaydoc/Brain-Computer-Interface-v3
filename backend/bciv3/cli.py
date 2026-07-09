@@ -130,6 +130,14 @@ def _bench(args) -> int:
 
 def _synthesize(args) -> int:
     import bciv3
+    if args.history:
+        rows = bciv3.synthesis.list_prototypes(limit=args.limit)
+        print(f"saved prototypes: {len(rows)}  (store: {bciv3.store.backend()})")
+        for r in rows:
+            sysd = r.get("system", {})
+            print(f"  [{str(r.get('ts',''))[:19].replace('T',' ')}] {sysd.get('system_name','?')} "
+                  f"· {len(r.get('bill_of_materials', []))} parts · id {str(r.get('id',''))[:10]}")
+        return 0
     st = bciv3.synthesis.status()
     print(f"solved: {st['solved_count']}/{st['total']} passing")
     for tid in bciv3.all_ids():
@@ -140,7 +148,7 @@ def _synthesize(args) -> int:
         return 1
     res = bciv3.synthesis.synthesize()
     sysd = res["system"]
-    print(f"\n🧬 {sysd['system_name']}  (built via {sysd['engine']})")
+    print(f"\n🧬 {sysd['system_name']}  (built via {sysd['engine']})  →  saved id={res.get('id')} to {bciv3.store.backend()} (syntheses)")
     print(f"\n{sysd['overview']}\n")
     print("END-TO-END PIPELINE:")
     for ph in res["pipeline"]:
@@ -232,6 +240,8 @@ def main(argv=None) -> int:
 
     sy = sub.add_parser("synthesize", help="fuse the 10 passing designs into one end-to-end BCI system (needs all 10)")
     sy.add_argument("--json", action="store_true", help="also print the full structured result")
+    sy.add_argument("--history", action="store_true", help="list previously saved prototypes instead of building a new one")
+    sy.add_argument("--limit", type=int, default=20, help="how many past prototypes to list (with --history)")
     sy.set_defaults(fn=_synthesize)
 
     db = sub.add_parser("db", help="list saved inventions (or --stats)")

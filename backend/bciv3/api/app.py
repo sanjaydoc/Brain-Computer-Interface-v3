@@ -178,9 +178,23 @@ def do_synthesis_status() -> dict:
 
 @app.post("/api/synthesize")
 def do_synthesize() -> dict:
-    """Fuse the 10 passing designs into one end-to-end brain-uploading system (schematic + parts)."""
+    """Fuse the 10 passing designs into one end-to-end brain-uploading system, and SAVE it as a
+    prototype in the `syntheses` table."""
     import bciv3
     return bciv3.synthesis.synthesize()
+
+
+@app.get("/api/syntheses")
+def do_syntheses(limit: int = 20) -> dict:
+    """Saved prototypes (past synthesized systems), newest first."""
+    import bciv3
+    return {"syntheses": bciv3.synthesis.list_prototypes(limit=limit), "store": bciv3.store.backend()}
+
+
+@app.delete("/api/syntheses/{rec_id}")
+def do_delete_synthesis(rec_id: str) -> dict:
+    import bciv3
+    return {"deleted": bciv3.store.delete_synthesis(rec_id)}
 
 
 # --- static cockpit (mounted last so /api/* always wins) ---------------------

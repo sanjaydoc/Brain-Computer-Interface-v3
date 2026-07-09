@@ -8,6 +8,8 @@ one saved record with ``score.passed`` — that's what unlocks the GUI's Synthes
 
 from __future__ import annotations
 
+from datetime import datetime, timezone
+
 from . import llm, store
 from .innovations import CATALOG, all_ids
 
@@ -129,8 +131,10 @@ def _deterministic_overview(pipeline: list[dict]) -> dict:
             "open_risks": ["Each stage is physically admissible in-model, not yet proven in a living human brain."]}
 
 
-def synthesize() -> dict:
-    """Fuse the 10 passing designs into one system. Raises if the gate isn't met (all 10 must pass)."""
+def synthesize(save: bool = True) -> dict:
+    """Fuse the 10 passing designs into one system. Raises if the gate isn't met (all 10 must pass).
+    Each run is saved as a 'prototype' to the `syntheses` table (unless save=False), so the library
+    of prototypes grows over time."""
     st = status()
     if not st["complete"]:
         return {"complete": False, "missing": st["missing"], "solved_count": st["solved_count"],
@@ -153,8 +157,17 @@ def synthesize() -> dict:
                     bom.append({"name": p.get("name"), "role": p.get("role"), "stage": s["title"], "phase": ph["phase"]})
 
     safety = _best_passing(SAFETY_TOPIC)
-    return {"complete": True, "system": system, "pipeline": pipeline,
-            "bill_of_materials": bom,
-            "safety": {"title": (safety or {}).get("title"), "params": (safety or {}).get("params", {}),
-                       "score": ((safety or {}).get("score") or {}).get("score")},
-            "solved_count": st["solved_count"], "total": st["total"], "store": store.backend()}
+    result = {"complete": True, "ts": datetime.now(timezone.utc).isoformat(),
+              "system": system, "pipeline": pipeline, "bill_of_materials": bom,
+              "safety": {"title": (safety or {}).get("title"), "params": (safety or {}).get("params", {}),
+                         "score": ((safety or {}).get("score") or {}).get("score")},
+              "sources": {tid: r.get("id") for tid, r in records.items()},   # which invention fed each stage
+              "solved_count": st["solved_count"], "total": st["total"], "store": store.backend()}
+    if save:
+        result["id"] = store.save_synthesis(result)
+    return result
+
+
+def list_prototypes(limit: int = 20) -> list[dict]:
+    """Saved synthesized systems (prototypes), newest first — for `bci synthesize --history` / the GUI."""
+    return store.list_syntheses(limit=limit)

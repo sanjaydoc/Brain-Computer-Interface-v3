@@ -88,6 +88,13 @@ you get the kind of invention you actually want. Both flow through to the LLM pr
 </tr>
 </table>
 
+![The entire invention — click any saved design to read it in full](docs/media/invdetail.png)
+
+> **Read the entire invention.** Click any saved design and it opens in full — the header verdict
+> (pass/fail · score · fidelity · limiting factor), the mechanism, the law simulator's per-domain read
+> (biophysics · physics · electronics · biology), every proposed parameter, the parts list, and the
+> assumptions and risks. Nothing is truncated.
+
 ---
 
 ## 🎯 Project goals
